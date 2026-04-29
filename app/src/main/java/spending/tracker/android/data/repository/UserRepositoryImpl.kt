@@ -1,6 +1,7 @@
 package spending.tracker.android.data.repository
 
 import android.util.Log
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import spending.tracker.android.data.local.database.AppDatabase
@@ -29,9 +30,10 @@ class UserRepositoryImpl(
     }.onFailure { Log.w(TAG, "syncUser(email=$email) failed", it) }
 
     override suspend fun clearUser(): Result<Unit> = runCatching {
-        // Очищаем ВСЕ таблицы (включая spendings, categories, subcategories)
-        // чтобы при смене пользователя данные предыдущего не просочились
-        appDatabase.clearAllTables()
+        // Если clearAllTables вызывается во время активной синхронизации — данные не просочатся частично.
+        appDatabase.withTransaction {
+            appDatabase.clearAllTables()
+        }
     }.onFailure { Log.w(TAG, "clearUser failed", it) }
 
     private companion object {
