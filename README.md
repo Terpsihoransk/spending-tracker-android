@@ -7,17 +7,13 @@
 ## Архитектура
 
 ```
-Android (Kotlin) → REST API (Java 25/Spring Boot) → Google Sheets
+
 ```
 
 ## Запуск
 
 ```bash
-# Backend
-cd backend && mvn spring-boot:run
 
-# Swagger UI
-http://localhost:8081/swagger-ui/index.html
 ```
 
 ## Подробности
@@ -27,9 +23,7 @@ http://localhost:8081/swagger-ui/index.html
 ## Модули проекта
 
 ```mermaid
-graph TD
-    Android[Android App<br/>Kotlin + Jetpack Compose] -->|REST API| Backend[Backend<br/>Java 25 + Spring Boot 4.0.4]
-    Backend -->|Google Sheets API| GoogleSheets[Google Sheets]
+
 ```
 
 | Модуль | Статус | Описание |
