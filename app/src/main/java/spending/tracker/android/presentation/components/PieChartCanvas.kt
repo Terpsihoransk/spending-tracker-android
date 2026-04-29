@@ -20,12 +20,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import spending.tracker.android.domain.model.Category
 
 /** Одна дольная секция диаграммы. */
 data class PieSlice(
     val label: String,
     val value: Double,
     val color: Color,
+    val category: Category? = null,
 )
 
 /**

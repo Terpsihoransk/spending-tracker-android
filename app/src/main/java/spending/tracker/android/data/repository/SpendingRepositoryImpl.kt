@@ -24,6 +24,12 @@ class SpendingRepositoryImpl(
         dao.replaceAllForUser(userEmail, remote.map { it.toEntity(synced = true) })
     }.onFailure { Log.w(TAG, "refreshSpendings(userEmail=$userEmail) failed", it) }
 
+    override suspend fun getSpendingById(userEmail: String, id: Long): Result<Spending> = runCatching {
+        val remote = api.getSpending(userEmail, id)
+        dao.upsertSpending(remote.toEntity(synced = true))
+        remote.toDomain()
+    }.onFailure { Log.w(TAG, "getSpendingById(id=$id) failed", it) }
+
     override suspend fun addSpending(
         userEmail: String,
         amount: Double,

@@ -17,6 +17,9 @@ interface SpendingRepository {
     /** Принудительная синхронизация с бэкендом. Обновляет локальный кэш. */
     suspend fun refreshSpendings(userEmail: String): Result<Unit>
 
+    /** Получить один расход по ID с бэка. */
+    suspend fun getSpendingById(userEmail: String, id: Long): Result<Spending>
+
     /**
      * Добавить расход (сеть + локальный кэш).
      *

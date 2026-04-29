@@ -24,6 +24,17 @@ class EmailEntryViewModel(
     private val _state = MutableStateFlow(EmailEntryState())
     val state: StateFlow<EmailEntryState> = _state.asStateFlow()
 
+    init {
+        // Предзаполняем email из сохранённой сессии
+        viewModelScope.launch {
+            sessionManager.emailFlow.collect { savedEmail ->
+                if (savedEmail.isNotBlank() && _state.value.email.isBlank()) {
+                    _state.value = _state.value.copy(email = savedEmail)
+                }
+            }
+        }
+    }
+
     fun onEmailChange(value: String) {
         _state.value = _state.value.copy(email = value.trim(), errorMessage = null)
     }

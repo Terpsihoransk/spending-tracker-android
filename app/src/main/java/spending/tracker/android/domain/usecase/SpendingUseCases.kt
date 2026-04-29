@@ -16,6 +16,12 @@ class RefreshSpendingsUseCase(private val repository: SpendingRepository) {
         repository.refreshSpendings(userEmail)
 }
 
+/** Получить один расход по ID с бэка. */
+class GetSpendingByIdUseCase(private val repository: SpendingRepository) {
+    suspend operator fun invoke(userEmail: String, id: Long): Result<Spending> =
+        repository.getSpendingById(userEmail, id)
+}
+
 /** Добавить расход. Дата выставляется сервером. */
 class AddSpendingUseCase(private val repository: SpendingRepository) {
     suspend operator fun invoke(

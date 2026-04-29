@@ -25,17 +25,14 @@ fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+    // MVP1: Всегда показываем экран ввода email, даже если пользователь уже входил.
+    // Email сохраняется в SessionManager для подстановки в поле ввода.
     val session: SessionManager = koinInject()
     val currentEmail by session.emailFlow.collectAsState(initial = "")
 
-    val startDestination = when {
-        currentEmail.isEmpty() -> Destination.EmailEntry.route
-        else -> Destination.Spendings.route
-    }
-
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Destination.EmailEntry.route,
         modifier = modifier,
     ) {
         composable(Destination.EmailEntry.route) {

@@ -2,6 +2,7 @@ package spending.tracker.android.presentation.screen.categories
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,18 +27,22 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.flowOf
 import org.koin.androidx.compose.koinViewModel
 import spending.tracker.android.domain.model.SubCategory
+import spending.tracker.android.presentation.components.AddSpendingFab
 import spending.tracker.android.presentation.components.EmptyState
 import spending.tracker.android.presentation.theme.CategoryColors
 
@@ -72,6 +78,15 @@ fun CategoriesScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var dialog by remember { mutableStateOf<CategoryDialog?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Показывать ошибки из ViewModel
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -85,65 +100,74 @@ fun CategoriesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { dialog = CategoryDialog.AddCategory },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Добавить категорию")
+            AddSpendingFab(onClick = { dialog = CategoryDialog.AddCategory })
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        if (state.items.isEmpty()) {
-            Box(
-                Modifier.padding(padding).fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                EmptyState(
-                    title = "Нет категорий",
-                    subtitle = "Нажмите «+» чтобы добавить первую категорию",
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(padding).fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(state.items, key = { it.category.id }) { item ->
-                    val expanded = item.category.id in state.expandedIds
-                    val subsState = if (expanded) {
-                        viewModel.subCategoriesFlow(item.category.id)
-                            .collectAsStateWithLifecycle(initialValue = emptyList())
-                    } else {
-                        flowOf(emptyList<SubCategory>())
-                            .collectAsStateWithLifecycle(initialValue = emptyList())
-                    }
-                    val colorIndex = (item.category.id % CategoryColors.size).toInt()
-
-                    EditableCategoryCard(
-                        name = item.category.name,
-                        accentColor = CategoryColors[colorIndex],
-                        subCategories = subsState.value,
-                        expanded = expanded,
-                        onToggle = { viewModel.toggle(item.category.id) },
-                        onEdit = {
-                            dialog = CategoryDialog.EditCategory(item.category.id, item.category.name)
-                        },
-                        onDelete = {
-                            dialog = CategoryDialog.DeleteCategory(item.category.id, item.category.name)
-                        },
-                        onAddSub = {
-                            dialog = CategoryDialog.AddSubCategory(item.category.id)
-                        },
-                        onEditSub = { sub ->
-                            dialog = CategoryDialog.EditSubCategory(sub.id, sub.categoryId, sub.name)
-                        },
-                        onDeleteSub = { sub ->
-                            dialog = CategoryDialog.DeleteSubCategory(sub.id, sub.name)
-                        },
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.padding(padding).fillMaxSize(),
+        ) {
+            if (state.items.isEmpty() && !state.isLoading) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EmptyState(
+                        title = "Нет категорий",
+                        subtitle = "Нажмите «+» чтобы добавить первую категорию",
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(state.items, key = { it.category.id }) { item ->
+                        val expanded = item.category.id in state.expandedIds
+                        val subsState = if (expanded) {
+                            viewModel.subCategoriesFlow(item.category.id)
+                                .collectAsStateWithLifecycle(initialValue = emptyList())
+                        } else {
+                            flowOf(emptyList<SubCategory>())
+                                .collectAsStateWithLifecycle(initialValue = emptyList())
+                        }
+                        val colorIndex = (item.category.id % CategoryColors.size).toInt()
+
+                        EditableCategoryCard(
+                            name = item.category.name,
+                            accentColor = CategoryColors[colorIndex],
+                            subCategories = subsState.value,
+                            expanded = expanded,
+                            onToggle = { viewModel.toggle(item.category.id) },
+                            onEdit = {
+                                dialog = CategoryDialog.EditCategory(item.category.id, item.category.name)
+                            },
+                            onDelete = {
+                                dialog = CategoryDialog.DeleteCategory(item.category.id, item.category.name)
+                            },
+                            onAddSub = {
+                                dialog = CategoryDialog.AddSubCategory(item.category.id)
+                            },
+                            onEditSub = { sub ->
+                                dialog = CategoryDialog.EditSubCategory(sub.id, sub.categoryId, sub.name)
+                            },
+                            onDeleteSub = { sub ->
+                                dialog = CategoryDialog.DeleteSubCategory(sub.id, sub.name)
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -299,16 +323,15 @@ private fun EditableCategoryCard(
                 )
                 Spacer(Modifier.width(12.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = onToggle),
+                ) {
                     Text(
                         text = name,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = "${subCategories.size} подкатегорий",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 

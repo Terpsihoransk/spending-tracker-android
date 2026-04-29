@@ -4,6 +4,8 @@
 
 **Версия**: v0.0.1 (MVP1)
 
+![img.png](img.png)
+
 ## Архитектура
 
 - **Domain**: Бизнес-логика и модели.
@@ -23,11 +25,12 @@
 
 ## Модули проекта
 
-| Модуль | Статус | Описание |
-|--------|--------|----------|
-| `backend/` | ✅ Готов | Java Spring Boot REST API |
-| `app/` | 📋 В разработке | Kotlin Android приложение |
+| Модуль | Статус | GitHub                    |
+|--------|--------|---------------------------|
+| `backend` | ✅ Готов | https://github.com/Terpsihoransk/spending_tracker |
+| `android` | ✅ Готов | https://github.com/Terpsihoransk/spending-tracker-android |
 
 ## Документация
 
 - [Инструкции для агентов](AGENTS.md)
+- [Спецификация](documentation/api_specification.md)
