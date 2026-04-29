@@ -123,5 +123,5 @@ val appModule = module {
     viewModelOf(::CategoriesViewModel)
     viewModelOf(::SummaryViewModel)
     viewModelOf(::ProfileViewModel)
-    viewModelOf(::EmailEntryViewModel)
+    viewModel { EmailEntryViewModel(get(), get()) }
 }

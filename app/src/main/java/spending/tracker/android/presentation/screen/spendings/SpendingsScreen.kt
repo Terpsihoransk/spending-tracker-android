@@ -78,7 +78,11 @@ fun SpendingsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+        ) {
             PeriodFilterChips(
                 selected = state.period,
                 onSelectedChange = viewModel::onPeriodChanged,

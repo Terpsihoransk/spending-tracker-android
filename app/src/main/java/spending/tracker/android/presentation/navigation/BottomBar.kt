@@ -1,9 +1,5 @@
 package spending.tracker.android.presentation.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -14,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,18 +29,10 @@ fun BottomBar(navController: NavHostController) {
         Destination.bottomBarItems.any { it.route == currentRoute }
     if (!showBottomBar) return
 
-    Box {
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outline,
-            thickness = 1.dp,
-        )
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .height(72.dp)
-                .padding(top = 1.dp),
-        ) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
             Destination.bottomBarItems.forEach { item ->
                 val selected = currentRoute == item.route
                 NavigationBarItem(
@@ -88,6 +75,5 @@ fun BottomBar(navController: NavHostController) {
                     ),
                 )
             }
-        }
     }
 }
