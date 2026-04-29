@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "463031717323",
+    "project_id": "spending-tracker-android-b5e5e",
+    "storage_bucket": "spending-tracker-android-b5e5e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463031717323:android:42e7e630077aa3638bfa4e",
+        "android_client_info": {
+          "package_name": "spending.tracker.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXjPDDZJ_nk3kJ4irtHB5vicnLt16IJ64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
