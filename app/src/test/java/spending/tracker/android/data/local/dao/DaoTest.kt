@@ -235,4 +235,36 @@ class DaoTest {
         spendingDao.deleteSpending(1)
         assertTrue(spendingDao.observeSpendings(email).first().isEmpty())
     }
+
+    @Test
+    fun clearAllTables_removesAllDataFromAllTables() = runTest {
+        val email = "logout-test@x.y"
+
+        // Раскладываем данные во все 4 таблицы
+        userDao.upsertUser(UserEntity(1, email, null))
+        categoryDao.upsertCategory(CategoryEntity(1, "Food", email))
+        categoryDao.upsertSubCategory(SubCategoryEntity(10, "Pizza", 1))
+        spendingDao.upsertSpending(
+            SpendingEntity(
+                id = 1, amount = 50.0, categoryId = 1, categoryName = "Food",
+                subCategoryId = 10, subCategoryName = "Pizza",
+                date = "2025-01-01", description = "Lunch", userEmail = email, synced = true,
+            ),
+        )
+
+        // Убеждаемся что данные есть
+        assertNotNull(userDao.observeCurrentUser().first())
+        assertEquals(1, categoryDao.observeCategories(email).first().size)
+        assertEquals(1, categoryDao.observeSubCategories(1).first().size)
+        assertEquals(1, spendingDao.observeSpendings(email).first().size)
+
+        // clearAllTables() — имитирует logout
+        db.clearAllTables()
+
+        // Все таблицы пусты
+        assertNull(userDao.observeCurrentUser().first())
+        assertTrue(categoryDao.observeCategories(email).first().isEmpty())
+        assertTrue(categoryDao.observeSubCategories(1).first().isEmpty())
+        assertTrue(spendingDao.observeSpendings(email).first().isEmpty())
+    }
 }

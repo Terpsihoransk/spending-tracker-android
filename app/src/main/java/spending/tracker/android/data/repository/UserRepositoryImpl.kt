@@ -3,6 +3,7 @@ package spending.tracker.android.data.repository
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import spending.tracker.android.data.local.database.AppDatabase
 import spending.tracker.android.data.local.dao.UserDao
 import spending.tracker.android.data.remote.api.UserApi
 import spending.tracker.android.data.remote.dto.UserRequest
@@ -14,6 +15,7 @@ import spending.tracker.android.util.toEntity
 class UserRepositoryImpl(
     private val api: UserApi,
     private val dao: UserDao,
+    private val appDatabase: AppDatabase,
 ) : UserRepository {
 
     override fun observeCurrentUser(): Flow<User?> =
@@ -27,7 +29,9 @@ class UserRepositoryImpl(
     }.onFailure { Log.w(TAG, "syncUser(email=$email) failed", it) }
 
     override suspend fun clearUser(): Result<Unit> = runCatching {
-        dao.clearUsers()
+        // Очищаем ВСЕ таблицы (включая spendings, categories, subcategories)
+        // чтобы при смене пользователя данные предыдущего не просочились
+        appDatabase.clearAllTables()
     }.onFailure { Log.w(TAG, "clearUser failed", it) }
 
     private companion object {
