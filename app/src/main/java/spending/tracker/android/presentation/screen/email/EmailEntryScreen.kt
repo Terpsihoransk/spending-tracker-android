@@ -55,7 +55,7 @@ fun EmailEntryScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Введите email, чтобы синхронизироваться с вашей таблицей",
+                text = "Введите свой email, google",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
