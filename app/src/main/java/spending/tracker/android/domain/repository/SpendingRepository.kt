@@ -12,14 +12,35 @@ import spending.tracker.android.domain.model.Spending
  */
 interface SpendingRepository {
     /** Подписка на локальный кэш расходов пользователя. */
-    fun observeSpendings(userId: Long): Flow<List<Spending>>
+    fun observeSpendings(userEmail: String): Flow<List<Spending>>
 
     /** Принудительная синхронизация с бэкендом. Обновляет локальный кэш. */
-    suspend fun refreshSpendings(userId: Long): Result<Unit>
+    suspend fun refreshSpendings(userEmail: String): Result<Unit>
 
-    /** Добавить расход (сеть + локальный кэш). */
-    suspend fun addSpending(spending: Spending): Result<Spending>
+    /**
+     * Добавить расход (сеть + локальный кэш).
+     *
+     * На бэке `date` проставляется серверной стороной в момент создания,
+     * поэтому сюда поле даты не передаём.
+     */
+    suspend fun addSpending(
+        userEmail: String,
+        amount: Double,
+        categoryId: Long,
+        subCategoryId: Long?,
+        description: String?,
+    ): Result<Spending>
+
+    /** Обновить существующий расход. */
+    suspend fun updateSpending(
+        userEmail: String,
+        id: Long,
+        amount: Double,
+        categoryId: Long,
+        subCategoryId: Long?,
+        description: String?,
+    ): Result<Spending>
 
     /** Удалить расход по id (сеть + локальный кэш). */
-    suspend fun deleteSpending(id: Long): Result<Unit>
+    suspend fun deleteSpending(userEmail: String, id: Long): Result<Unit>
 }
