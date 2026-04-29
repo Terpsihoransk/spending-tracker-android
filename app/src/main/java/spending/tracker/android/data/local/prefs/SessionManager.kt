@@ -32,4 +32,7 @@ class SessionManager(private val context: Context) {
     suspend fun clear() {
         context.sessionDataStore.edit { it.remove(emailKey) }
     }
+
+    /** Алиас для согласованности с API очистки данных пользователя */
+    suspend fun clearSession() = clear()
 }

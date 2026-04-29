@@ -74,7 +74,7 @@ val appModule = module {
     // --- Repositories ---
     single<SpendingRepository> { SpendingRepositoryImpl(get(), get()) }
     single<CategoryRepository> { CategoryRepositoryImpl(get(), get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get(), get()) }
 
     // --- UseCases: Spending ---
     factoryOf(::ObserveSpendingsUseCase)
