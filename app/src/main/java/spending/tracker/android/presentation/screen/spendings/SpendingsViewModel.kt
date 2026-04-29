@@ -28,7 +28,7 @@ data class SpendingsUiState(
     val isLoading: Boolean = false,
     val spendings: List<Spending> = emptyList(),
     val categories: Map<Long, Category> = emptyMap(),
-    val period: PeriodFilter = PeriodFilter.Month,
+    val period: PeriodFilter = PeriodFilter.Today,
     val errorMessage: String? = null,
 ) {
     /** Отфильтрованный по [period] список. */
@@ -61,7 +61,7 @@ class SpendingsViewModel(
     private val deleteSpending: DeleteSpendingUseCase,
 ) : ViewModel() {
 
-    private val period = MutableStateFlow(PeriodFilter.Month)
+    private val period = MutableStateFlow(PeriodFilter.Today)
     private val error = MutableStateFlow<String?>(null)
 
     /** Текущий email пользователя (идентификатор на бэке). */

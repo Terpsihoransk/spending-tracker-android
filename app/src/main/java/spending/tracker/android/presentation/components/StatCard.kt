@@ -48,18 +48,31 @@ fun StatCard(
     }
 }
 
-/** Горизонтальный ряд из двух [StatCard]. */
+/** Горизонтальный ряд из двух или трёх [StatCard]. */
 @Composable
 fun StatRow(
     left: @Composable () -> Unit,
+    middle: @Composable () -> Unit = {},
     right: @Composable () -> Unit,
+    showThreeColumns: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(modifier = Modifier.weight(1f)) { left() }
-        Box(modifier = Modifier.weight(1f)) { right() }
+    if (showThreeColumns) {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Box(modifier = Modifier.weight(1f)) { left() }
+            Box(modifier = Modifier.weight(1f)) { middle() }
+            Box(modifier = Modifier.weight(1f)) { right() }
+        }
+    } else {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(modifier = Modifier.weight(1f)) { left() }
+            Box(modifier = Modifier.weight(1f)) { right() }
+        }
     }
 }

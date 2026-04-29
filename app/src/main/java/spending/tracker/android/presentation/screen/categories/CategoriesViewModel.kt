@@ -36,6 +36,8 @@ data class CategoriesUiState(
     val items: List<CategoryWithSubs> = emptyList(),
     val expandedIds: Set<Long> = emptySet(),
     val errorMessage: String? = null,
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,6 +57,8 @@ class CategoriesViewModel(
 
     private val expanded = MutableStateFlow<Set<Long>>(emptySet())
     private val error = MutableStateFlow<String?>(null)
+    private val isLoading = MutableStateFlow(false)
+    private val isRefreshing = MutableStateFlow(false)
 
     private val userEmail: StateFlow<String?> = observeCurrentUser()
         .map { it?.email }
@@ -68,11 +72,15 @@ class CategoriesViewModel(
         categoriesFlow,
         expanded,
         error,
-    ) { cats, exp, err ->
+        isLoading,
+        isRefreshing,
+    ) { cats, exp, err, loading, refreshing ->
         CategoriesUiState(
             items = cats.map { CategoryWithSubs(it, emptyList()) },
             expandedIds = exp,
             errorMessage = err,
+            isLoading = loading,
+            isRefreshing = refreshing,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -84,7 +92,10 @@ class CategoriesViewModel(
         viewModelScope.launch {
             userEmail.collect { email ->
                 if (email != null) {
-                    refreshCategories(email).onFailure { error.value = it.message }
+                    isLoading.value = true
+                    refreshCategories(email)
+                        .onFailure { error.value = it.message }
+                    isLoading.value = false
                 }
             }
         }
@@ -126,7 +137,13 @@ class CategoriesViewModel(
     fun onDeleteCategory(id: Long) {
         val email = userEmail.value ?: return
         viewModelScope.launch {
-            deleteCategory(email, id).onFailure { error.value = it.message }
+            deleteCategory(email, id).onFailure { e ->
+                error.value = if (e.message?.contains("409") == true) {
+                    "Категория не была удалена"
+                } else {
+                    e.message
+                }
+            }
         }
     }
 
@@ -149,11 +166,27 @@ class CategoriesViewModel(
     fun onDeleteSubCategory(id: Long) {
         val email = userEmail.value ?: return
         viewModelScope.launch {
-            deleteSubCategory(email, id).onFailure { error.value = it.message }
+            deleteSubCategory(email, id).onFailure { e ->
+                error.value = if (e.message?.contains("409") == true) {
+                    "Подкатегория не была удалена"
+                } else {
+                    e.message
+                }
+            }
         }
     }
 
     fun clearError() {
         error.value = null
+    }
+
+    fun refresh() {
+        val email = userEmail.value ?: return
+        viewModelScope.launch {
+            isRefreshing.value = true
+            refreshCategories(email)
+                .onFailure { error.value = it.message }
+            isRefreshing.value = false
+        }
     }
 }
