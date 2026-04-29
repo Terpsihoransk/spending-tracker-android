@@ -27,6 +27,7 @@ import spending.tracker.android.domain.usecase.DeleteCategoryUseCase
 import spending.tracker.android.domain.usecase.DeleteSpendingUseCase
 import spending.tracker.android.domain.usecase.DeleteSubCategoryUseCase
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
+import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
@@ -79,6 +80,7 @@ val appModule = module {
     // --- UseCases: Spending ---
     factoryOf(::ObserveSpendingsUseCase)
     factoryOf(::RefreshSpendingsUseCase)
+    factoryOf(::GetSpendingByIdUseCase)
     factoryOf(::AddSpendingUseCase)
     factoryOf(::UpdateSpendingUseCase)
     factoryOf(::DeleteSpendingUseCase)
@@ -111,9 +113,11 @@ val appModule = module {
             observeCurrentUser = get(),
             observeCategories = get(),
             observeSubCategories = get(),
-            observeSpendings = get(),
             addSpending = get(),
             updateSpending = get(),
+            getSpendingById = get(),
+            addCategoryUseCase = get(),
+            addSubCategoryUseCase = get(),
         )
     }
     viewModelOf(::CategoriesViewModel)

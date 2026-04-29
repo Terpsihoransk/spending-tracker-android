@@ -17,9 +17,11 @@ import kotlinx.coroutines.launch
 import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.SubCategory
 import spending.tracker.android.domain.usecase.AddSpendingUseCase
+import spending.tracker.android.domain.usecase.AddSubCategoryUseCase
+import spending.tracker.android.domain.usecase.AddCategoryUseCase
+import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
-import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.UpdateSpendingUseCase
 
@@ -68,9 +70,11 @@ class AddSpendingViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val observeCategories: ObserveCategoriesUseCase,
     private val observeSubCategories: ObserveSubCategoriesUseCase,
-    private val observeSpendings: ObserveSpendingsUseCase,
     private val addSpending: AddSpendingUseCase,
     private val updateSpending: UpdateSpendingUseCase,
+    private val getSpendingById: GetSpendingByIdUseCase,
+    private val addCategoryUseCase: AddCategoryUseCase,
+    private val addSubCategoryUseCase: AddSubCategoryUseCase,
 ) : ViewModel() {
 
     private val edits = MutableStateFlow(
@@ -123,31 +127,40 @@ class AddSpendingViewModel(
         }
     }
 
-    /** Загрузить существующий расход из локального кэша (по observeSpendings). */
+    /**
+     * Вызывается при каждом открытии sheet в режиме редактирования.
+     * Сбрасывает состояние и загружает данные заново.
+     */
+    fun onEditOpened(id: Long) {
+        edits.value = FormEdits(isEditMode = true, isInitialLoading = true)
+        preloadSpending(id)
+    }
+
+    /** Загрузить существующий расход с бэка по ID. */
     private fun preloadSpending(id: Long) {
         viewModelScope.launch {
             val email = userEmail.filterNotNull().first()
-            // Забираем одно значение из Flow.
-            val list = observeSpendings(email).first()
-            val existing = list.firstOrNull { it.id == id }
-            if (existing == null) {
-                edits.update {
-                    it.copy(
-                        isInitialLoading = false,
-                        errorMessage = "Расход не найден"
-                    )
-                }
-                return@launch
-            }
-            edits.update {
-                it.copy(
-                    amountInput = existing.amount.toPlainString(),
-                    selectedCategoryId = existing.categoryId,
-                    selectedSubCategoryId = existing.subCategoryId,
-                    description = existing.description.orEmpty(),
-                    isInitialLoading = false,
-                )
-            }
+            getSpendingById(email, id).fold(
+                onSuccess = { spending ->
+                    edits.update {
+                        it.copy(
+                            amountInput = spending.amount.toPlainString(),
+                            selectedCategoryId = spending.categoryId,
+                            selectedSubCategoryId = spending.subCategoryId,
+                            description = spending.description.orEmpty(),
+                            isInitialLoading = false,
+                        )
+                    }
+                },
+                onFailure = {
+                    edits.update {
+                        it.copy(
+                            isInitialLoading = false,
+                            errorMessage = "Не удалось загрузить расход"
+                        )
+                    }
+                },
+            )
         }
     }
 
@@ -166,6 +179,39 @@ class AddSpendingViewModel(
 
     fun onDescriptionChange(value: String) {
         edits.update { it.copy(description = value) }
+    }
+
+    /** Добавить новую категорию и выбрать её. */
+    fun addCategory(name: String, onSuccess: () -> Unit) {
+        val email = userEmail.value ?: return
+        viewModelScope.launch {
+            addCategoryUseCase(email, name).fold(
+                onSuccess = { category ->
+                    edits.update { it.copy(selectedCategoryId = category.id, selectedSubCategoryId = null) }
+                    onSuccess()
+                },
+                onFailure = { err ->
+                    edits.update { it.copy(errorMessage = err.message ?: "Не удалось создать категорию") }
+                },
+            )
+        }
+    }
+
+    /** Добавить новую подкатегорию и выбрать её. */
+    fun addSubCategory(name: String, onSuccess: () -> Unit) {
+        val email = userEmail.value ?: return
+        val categoryId = edits.value.selectedCategoryId ?: return
+        viewModelScope.launch {
+            addSubCategoryUseCase(email, categoryId, name).fold(
+                onSuccess = { subCategory ->
+                    edits.update { it.copy(selectedSubCategoryId = subCategory.id) }
+                    onSuccess()
+                },
+                onFailure = { err ->
+                    edits.update { it.copy(errorMessage = err.message ?: "Не удалось создать подкатегорию") }
+                },
+            )
+        }
     }
 
     fun clearError() {

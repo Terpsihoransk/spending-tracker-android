@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,6 +20,7 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +43,8 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.SubCategory
+
+private const val MAX_DESCRIPTION_LENGTH = 40
 
 /**
  * Modal-bottom-sheet для добавления или редактирования расхода.
@@ -58,6 +64,11 @@ fun AddSpendingSheet(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    // При каждом открытии sheet в режиме редактирования — загружаем данные заново.
+    LaunchedEffect(spendingId) {
+        spendingId?.let { viewModel.onEditOpened(it) }
+    }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -97,6 +108,7 @@ fun AddSpendingSheet(
                     categories = state.categories,
                     selectedId = state.selectedCategoryId,
                     onSelect = viewModel::onCategoryChange,
+                    onAddNew = viewModel::addCategory,
                 )
                 Spacer(Modifier.height(12.dp))
 
@@ -104,15 +116,17 @@ fun AddSpendingSheet(
                     subCategories = state.subCategories,
                     selectedId = state.selectedSubCategoryId,
                     onSelect = viewModel::onSubCategoryChange,
+                    onAddNew = viewModel::addSubCategory,
                     enabled = state.selectedCategoryId != null,
                 )
                 Spacer(Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = state.description,
-                    onValueChange = viewModel::onDescriptionChange,
+                    onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChange(it) },
                     label = { Text("Комментарий (необязательно)") },
                     singleLine = true,
+                    supportingText = { Text("${state.description.length}/$MAX_DESCRIPTION_LENGTH") },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -171,8 +185,11 @@ private fun CategoryDropdown(
     categories: List<Category>,
     selectedId: Long?,
     onSelect: (Long) -> Unit,
+    onAddNew: (String, () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
     val selectedName = categories.firstOrNull { it.id == selectedId }?.name ?: ""
 
     ExposedDropdownMenuBox(
@@ -202,7 +219,66 @@ private fun CategoryDropdown(
                     },
                 )
             }
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Добавить категорию", color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                onClick = {
+                    expanded = false
+                    showAddDialog = true
+                },
+            )
         }
+    }
+
+    if (showAddDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                showAddDialog = false
+                newCategoryName = ""
+            },
+            title = { Text("Новая категория") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Название") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onAddNew(newCategoryName) {
+                                showAddDialog = false
+                                newCategoryName = ""
+                            }
+                        }
+                    },
+                    enabled = newCategoryName.isNotBlank(),
+                ) {
+                    Text("Добавить")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAddDialog = false
+                    newCategoryName = ""
+                }) {
+                    Text("Отмена")
+                }
+            },
+        )
     }
 }
 
@@ -212,9 +288,12 @@ private fun SubCategoryDropdown(
     subCategories: List<SubCategory>,
     selectedId: Long?,
     onSelect: (Long?) -> Unit,
+    onAddNew: (String, () -> Unit) -> Unit,
     enabled: Boolean,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newSubCategoryName by remember { mutableStateOf("") }
     val selectedName = subCategories.firstOrNull { it.id == selectedId }?.name ?: ""
 
     ExposedDropdownMenuBox(
@@ -227,7 +306,7 @@ private fun SubCategoryDropdown(
             readOnly = true,
             enabled = enabled,
             label = { Text("Подкатегория (необязательно)") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled) },
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth(),
@@ -252,7 +331,68 @@ private fun SubCategoryDropdown(
                     },
                 )
             }
+            if (enabled) {
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Добавить подкатегорию", color = MaterialTheme.colorScheme.primary)
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        showAddDialog = true
+                    },
+                )
+            }
         }
+    }
+
+    if (showAddDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                showAddDialog = false
+                newSubCategoryName = ""
+            },
+            title = { Text("Новая подкатегория") },
+            text = {
+                OutlinedTextField(
+                    value = newSubCategoryName,
+                    onValueChange = { newSubCategoryName = it },
+                    label = { Text("Название") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newSubCategoryName.isNotBlank()) {
+                            onAddNew(newSubCategoryName) {
+                                showAddDialog = false
+                                newSubCategoryName = ""
+                            }
+                        }
+                    },
+                    enabled = newSubCategoryName.isNotBlank(),
+                ) {
+                    Text("Добавить")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAddDialog = false
+                    newSubCategoryName = ""
+                }) {
+                    Text("Отмена")
+                }
+            },
+        )
     }
 }
 

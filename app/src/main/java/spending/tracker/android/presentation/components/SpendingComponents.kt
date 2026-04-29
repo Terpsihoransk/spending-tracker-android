@@ -68,20 +68,19 @@ fun SpendingCard(
             Spacer(Modifier.size(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = categoryName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (!subCategoryName.isNullOrBlank()) {
                     Text(
-                        text = categoryName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = subCategoryName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (!subCategoryName.isNullOrBlank()) {
-                        Text(
-                            text = " · $subCategoryName",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
+                Spacer(Modifier.height(4.dp))
                 val secondary = buildString {
                     if (!description.isNullOrBlank()) append(description)
                     if (!description.isNullOrBlank()) append(" · ")

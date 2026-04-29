@@ -15,7 +15,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +45,16 @@ fun SpendingsScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     /** Не-null → открыт sheet редактирования для этого id. */
     var editingSpendingId by remember { mutableStateOf<Long?>(null) }
+
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    // Управление состоянием обновления
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            isRefreshing = false
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -72,34 +85,44 @@ fun SpendingsScreen(
                 modifier = Modifier.padding(vertical = 8.dp),
             )
 
-            if (state.filteredSpendings.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    EmptyState(
-                        title = "Здесь пока пусто",
-                        subtitle = "Нажмите «+» чтобы добавить первый расход",
-                    )
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    items(state.filteredSpendings, key = { it.id }) { spending ->
-                        val category = state.categories[spending.categoryId]
-                        val colorIndex =
-                            (spending.categoryId % CategoryColors.size).toInt()
-                        SpendingCard(
-                            amount = spending.amount,
-                            categoryName = category?.name ?: "Без категории",
-                            subCategoryName = null, // имя подкатегории не грузим в список — для MVP1 опционально
-                            description = spending.description,
-                            date = spending.date,
-                            accentColor = CategoryColors[colorIndex],
-                            onClick = { editingSpendingId = spending.id },
-                            onLongClick = { viewModel.onDelete(spending.id) },
-                            modifier = Modifier.padding(vertical = 4.dp),
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.onRefresh()
+                },
+                state = pullToRefreshState,
+                modifier = Modifier.weight(1f),
+            ) {
+                if (state.filteredSpendings.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        EmptyState(
+                            title = "Здесь пока пусто",
+                            subtitle = "Нажмите «+» чтобы добавить первый расход",
                         )
                     }
-                    item { Spacer(Modifier.height(72.dp)) } // пространство под FAB
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        items(state.filteredSpendings, key = { it.id }) { spending ->
+                            val category = state.categories[spending.categoryId]
+                            val colorIndex =
+                                (spending.categoryId % CategoryColors.size).toInt()
+                            SpendingCard(
+                                amount = spending.amount,
+                                categoryName = category?.name ?: "Без категории",
+                                subCategoryName = spending.subCategoryName,
+                                description = spending.description,
+                                date = spending.date,
+                                accentColor = CategoryColors[colorIndex],
+                                onClick = { editingSpendingId = spending.id },
+                                onLongClick = { viewModel.onDelete(spending.id) },
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                        item { Spacer(Modifier.height(72.dp)) } // пространство под FAB
+                    }
                 }
             }
         }
