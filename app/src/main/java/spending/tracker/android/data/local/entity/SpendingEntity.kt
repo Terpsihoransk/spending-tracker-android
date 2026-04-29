@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "spendings",
     indices = [
-        Index("userId"),
+        Index("userEmail"),
         Index("categoryId"),
         Index("subCategoryId"),
         Index("date")
@@ -17,9 +17,11 @@ data class SpendingEntity(
     @PrimaryKey val id: Long,
     val amount: Double,
     val categoryId: Long,
+    val categoryName: String,
     val subCategoryId: Long?,
+    val subCategoryName: String?,
     val date: String, // ISO-8601 (LocalDate.toString())
     val description: String?,
-    val userId: Long,
-    val synced: Boolean = true
+    val userEmail: String,
+    val synced: Boolean = true,
 )
