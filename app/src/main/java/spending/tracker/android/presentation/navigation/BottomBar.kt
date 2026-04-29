@@ -30,9 +30,9 @@ fun BottomBar(navController: NavHostController) {
     val currentRoute = backStackEntry?.destination?.route
 
     // Скрываем для служебных экранов (EmailEntry)
-    if (currentRoute != null &&
-        Destination.bottomBarItems.none { it.route == currentRoute }
-    ) return
+    val showBottomBar = currentRoute != null &&
+        Destination.bottomBarItems.any { it.route == currentRoute }
+    if (!showBottomBar) return
 
     Box {
         HorizontalDivider(
@@ -52,7 +52,11 @@ fun BottomBar(navController: NavHostController) {
                     selected = selected,
                     onClick = {
                         if (!selected) {
-                            try {
+                            val graphReady = runCatching {
+                                navController.graph
+                            }.isSuccess
+
+                            if (graphReady) {
                                 navController.navigate(item.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -60,9 +64,6 @@ fun BottomBar(navController: NavHostController) {
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                            } catch (_: IllegalStateException) {
-                                // Граф ещё не установлен — навигация без popUpTo
-                                navController.navigate(item.route)
                             }
                         }
                     },

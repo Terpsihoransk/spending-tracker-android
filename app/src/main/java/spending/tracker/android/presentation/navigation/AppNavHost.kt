@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import org.koin.compose.koinInject
 import spending.tracker.android.data.local.prefs.SessionManager
 import spending.tracker.android.presentation.screen.categories.CategoriesScreen
@@ -23,17 +22,16 @@ import spending.tracker.android.presentation.screen.summary.SummaryScreen
  */
 @Composable
 fun AppNavHost(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
     val session: SessionManager = koinInject()
-    val currentEmail by session.emailFlow.collectAsState(initial = null)
+    val currentEmail by session.emailFlow.collectAsState(initial = "")
 
-    val startDestination = when (currentEmail) {
-        null -> null // ещё не прочитали DataStore — подождём
-        "" -> Destination.EmailEntry.route
+    val startDestination = when {
+        currentEmail.isEmpty() -> Destination.EmailEntry.route
         else -> Destination.Spendings.route
-    } ?: return
+    }
 
     NavHost(
         navController = navController,

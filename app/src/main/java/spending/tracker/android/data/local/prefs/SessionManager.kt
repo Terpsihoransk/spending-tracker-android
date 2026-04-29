@@ -22,8 +22,8 @@ private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataS
 class SessionManager(private val context: Context) {
     private val emailKey = stringPreferencesKey("current_email")
 
-    val emailFlow: Flow<String?> = context.sessionDataStore.data
-        .map { prefs -> prefs[emailKey] }
+    val emailFlow: Flow<String> = context.sessionDataStore.data
+        .map { prefs -> prefs[emailKey] ?: "" }
 
     suspend fun setEmail(email: String) {
         context.sessionDataStore.edit { it[emailKey] = email }
