@@ -13,3 +13,49 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/deploymentTargetDropDown.xml
+.idea/gradle.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/caches/
+.idea/libraries/
+
+# Gradle
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log files
+*.log
+
+# Android Captures
+/captures
+
+# Built variants
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Generated files
+bin/
+gen/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Kilo
+/.plans/
