@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package spending.tracker.android.util
 
 import java.text.NumberFormat

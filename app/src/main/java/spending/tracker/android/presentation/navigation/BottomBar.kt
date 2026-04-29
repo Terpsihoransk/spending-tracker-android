@@ -52,12 +52,17 @@ fun BottomBar(navController: NavHostController) {
                     selected = selected,
                     onClick = {
                         if (!selected) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            try {
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            } catch (_: IllegalStateException) {
+                                // Граф ещё не установлен — навигация без popUpTo
+                                navController.navigate(item.route)
                             }
                         }
                     },
