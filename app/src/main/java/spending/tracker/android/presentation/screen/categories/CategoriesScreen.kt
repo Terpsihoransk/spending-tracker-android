@@ -199,7 +199,7 @@ fun CategoriesScreen(
         )
         is CategoryDialog.DeleteSubCategory -> ConfirmDialog(
             title = "Удалить подкатегорию?",
-            message = "Подкатегория «${d.name}» будет удалена.",
+            message = "Подкатегория «${d.name}» будет удалена. Если она используется в расходах, удаление будет отклонено бэкендом.",
             onConfirm = {
                 viewModel.onDeleteSubCategory(d.id)
                 dialog = null
