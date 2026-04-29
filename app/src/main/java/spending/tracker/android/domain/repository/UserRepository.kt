@@ -7,7 +7,9 @@ import spending.tracker.android.domain.model.User
  * Offline-first репозиторий пользователя (MVP1: один пользователь на устройстве).
  *
  * [observeCurrentUser] — подписка на локальный кэш (источник истины для UI).
- * [syncUser] — запросить пользователя с бэкенда по email и обновить локальный кэш.
+ * [syncUser] — получить пользователя с бэкенда по email.
+ *   Если на бэке такого нет — создаёт нового через POST /user.
+ * [clearUser] — очистить локальный кэш (logout).
  */
 interface UserRepository {
     fun observeCurrentUser(): Flow<User?>

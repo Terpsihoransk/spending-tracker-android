@@ -6,10 +6,10 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "categories",
-    indices = [Index("userId")]
+    indices = [Index("userEmail")]
 )
 data class CategoryEntity(
     @PrimaryKey val id: Long,
     val name: String,
-    val userId: Long
+    val userEmail: String,
 )
