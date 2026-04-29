@@ -118,7 +118,9 @@ fun ProfileScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = user?.googleSheetsId ?: "—",
+                        text = user?.googleSheetsId?.let { id ->
+                            if (id.length > 12) id.take(8) + "..." else id
+                        } ?: "—",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
