@@ -17,7 +17,9 @@ enum class PeriodFilter(val title: String) {
     Today("Сегодня"),
     Week("Неделя"),
     Month("Месяц"),
+    Year("Год"),
     All("Всё"),
+    Custom("Свой"),
 }
 
 @Composable

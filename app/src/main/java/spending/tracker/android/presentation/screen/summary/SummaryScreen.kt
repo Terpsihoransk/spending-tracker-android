@@ -70,6 +70,9 @@ import spending.tracker.android.util.formatRelativeDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+private val displayDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,7 +144,7 @@ fun SummaryScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = state.customDateRange?.startDate?.toString() ?: "Начало",
+                            text = state.customDateRange?.startDate?.format(displayDateFormatter) ?: "Начало",
                         )
                     }
                     Text("—")
@@ -156,7 +159,7 @@ fun SummaryScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = state.customDateRange?.endDate?.toString() ?: "Конец",
+                            text = state.customDateRange?.endDate?.format(displayDateFormatter) ?: LocalDate.now().format(displayDateFormatter),
                         )
                     }
                 }
@@ -265,11 +268,14 @@ fun SummaryScreen(
             // --- Диаграмма за период ---
             if (state.periodCategories.isNotEmpty()) {
                 SectionCard(title = "Распределение за период") {
-                    val slices = state.periodCategories.mapIndexed { index, entry ->
+                    val slices = state.periodCategories.map { entry ->
+                        // Цвет категории определяется по ID, чтобы быть стабильным
+                        // независимо от порядка категорий в списке
+                        val colorIndex = (entry.category.id % CategoryColors.size).toInt()
                         PieSlice(
                             label = entry.category.name,
                             value = entry.total,
-                            color = CategoryColors[index % CategoryColors.size],
+                            color = CategoryColors[colorIndex],
                             category = entry.category,
                         )
                     }
@@ -342,7 +348,8 @@ fun SummaryScreen(
                     if (currentRange != null) {
                         viewModel.onCustomDateRangeChanged(currentRange.startDate, date)
                     } else {
-                        viewModel.onCustomDateRangeChanged(date, date)
+                        // При первом выборе даты "до" startDate = сегодня, endDate = выбранная дата
+                        viewModel.onCustomDateRangeChanged(LocalDate.now(), date)
                     }
                     showEndDatePicker = false
                 },

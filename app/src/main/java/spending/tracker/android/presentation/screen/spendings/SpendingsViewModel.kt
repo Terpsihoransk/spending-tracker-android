@@ -23,12 +23,19 @@ import spending.tracker.android.domain.usecase.RefreshSpendingsUseCase
 import spending.tracker.android.presentation.components.PeriodFilter
 import java.time.LocalDate
 
+/** Диапазон дат для custom периода. */
+data class DateRange(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+)
+
 /** Состояние экрана «Расходы». */
 data class SpendingsUiState(
     val isLoading: Boolean = false,
     val spendings: List<Spending> = emptyList(),
     val categories: Map<Long, Category> = emptyMap(),
     val period: PeriodFilter = PeriodFilter.Today,
+    val customDateRange: DateRange? = null,
     val errorMessage: String? = null,
 ) {
     /** Отфильтрованный по [period] список. */
@@ -41,7 +48,13 @@ data class SpendingsUiState(
                     PeriodFilter.Week -> spending.date >= today.minusDays(6)
                     PeriodFilter.Month -> spending.date.year == today.year &&
                             spending.date.month == today.month
+                    PeriodFilter.Year -> spending.date.year == today.year
                     PeriodFilter.All -> true
+                    PeriodFilter.Custom -> {
+                        customDateRange?.let { range ->
+                            spending.date >= range.startDate && spending.date <= range.endDate
+                        } ?: true
+                    }
                 }
             }
         }
@@ -62,6 +75,7 @@ class SpendingsViewModel(
 ) : ViewModel() {
 
     private val period = MutableStateFlow(PeriodFilter.Today)
+    private val customDateRange = MutableStateFlow<DateRange?>(null)
     private val error = MutableStateFlow<String?>(null)
 
     /** Текущий email пользователя (идентификатор на бэке). */
@@ -81,13 +95,15 @@ class SpendingsViewModel(
         spendingsFlow,
         categoriesFlow,
         period,
+        customDateRange,
         error,
-    ) { spendings, categories, p, err ->
+    ) { spendings, categories, p, range, err ->
         SpendingsUiState(
             isLoading = false,
             spendings = spendings.sortedByDescending { it.date },
             categories = categories.associateBy { it.id },
             period = p,
+            customDateRange = range,
             errorMessage = err,
         )
     }.stateIn(
@@ -109,6 +125,10 @@ class SpendingsViewModel(
 
     fun onPeriodChanged(newPeriod: PeriodFilter) {
         period.value = newPeriod
+    }
+
+    fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {
+        customDateRange.value = DateRange(startDate, endDate)
     }
 
     fun onRefresh() {
