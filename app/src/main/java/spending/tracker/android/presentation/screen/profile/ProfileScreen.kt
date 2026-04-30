@@ -1,6 +1,8 @@
 package spending.tracker.android.presentation.screen.profile
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -129,13 +131,20 @@ fun ProfileScreen(
                         Spacer(Modifier.height(8.dp))
                         OutlinedButton(
                             onClick = {
+                                val sheetId = user.googleSheetsId ?: return@OutlinedButton
                                 val url =
                                     "https://docs.google.com/spreadsheets/d/$sheetId/edit"
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(Intent.ACTION_VIEW, url.toUri())
-                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                                    )
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Throwable) {
+                                    Toast.makeText(
+                                        context,
+                                        "Не удалось открыть таблицу: ${e.message}",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                 }
                             },
                         ) {
