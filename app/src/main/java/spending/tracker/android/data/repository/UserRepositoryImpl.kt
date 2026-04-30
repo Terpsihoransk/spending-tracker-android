@@ -26,7 +26,7 @@ class UserRepositoryImpl(
 
     override suspend fun syncUser(email: String): Result<User> = runCatching {
         val existing = api.getUserByEmail(email)
-        val remote = existing ?: api.createUser(UserRequest(email = email, googleSheetsId = null))
+        val remote = existing ?: api.createUser(UserRequest(email = email))
         dao.replaceCurrentUser(remote.toEntity())
         remote.toDomain()
     }.onFailure { Log.w(TAG, "syncUser(email=$email) failed", it) }

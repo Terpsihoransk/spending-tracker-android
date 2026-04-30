@@ -9,7 +9,6 @@ import java.time.LocalDate
 @Serializable
 data class UserRequest(
     val email: String,
-    val googleSheetsId: String? = null,
 )
 
 @Serializable
