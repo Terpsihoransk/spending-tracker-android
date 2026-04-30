@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)file:///C:/Users/arsen/Downloads/spending_tracker_mockup.html -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spending Tracker — UI Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0a14;
+    color: #e8e0ff;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+    color: #c084fc;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #5a5278;
+    margin-bottom: 40px;
+  }
+
+  .screens-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .screen-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .screen-label {
+    font-size: 12px;
+    color: #6b6390;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .phone {
+    background: #1a1a2e;
+    border-radius: 36px;
+    padding: 14px;
+    width: 300px;
+    border: 2px solid #2d2d4e;
+    box-shadow: 0 0 40px rgba(124,58,237,0.15), 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .screen {
+    background: #12121f;
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 580px;
+  }
+
+  .status-bar {
+    background: #12121f;
+    padding: 8px 16px 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .status-bar span { color: #555; font-size: 10px; }
+
+  .topbar {
+    background: #12121f;
+    padding: 10px 16px 8px;
+    border-bottom: 0.5px solid #1e1e35;
+  }
+  .topbar h2 { color: #e8e0ff; font-size: 17px; font-weight: 500; }
+  .topbar-row { display: flex; justify-content: space-between; align-items: center; }
+  .topbar p { color: #5a5278; font-size: 10px; margin-top: 2px; }
+
+  .filter-btn {
+    background: #1e1b35;
+    border: 0.5px solid #3d3268;
+    border-radius: 20px;
+    color: #a08de0;
+    font-size: 10px;
+    padding: 4px 10px;
+    font-family: inherit;
+  }
+
+  .content {
+    flex: 1;
+    padding: 10px 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Cards */
+  .tx-card {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .tx-cat { font-size: 9px; color: #7c6cc4; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+  .tx-subcat { font-size: 12px; color: #ddd6ff; font-weight: 500; margin-top: 2px; }
+  .tx-comment { font-size: 10px; color: #4e4670; margin-top: 2px; }
+  .tx-date { font-size: 10px; color: #3d3562; margin-top: 4px; }
+  .tx-amount { font-size: 15px; font-weight: 600; color: #b57bee; }
+
+  /* Total bar */
+  .total-bar {
+    background: #0f0f1e;
+    border-top: 0.5px solid #1e1e35;
+    padding: 9px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .total-bar span:first-child { font-size: 10px; color: #4e4670; }
+  .total-bar span:last-child { font-size: 16px; font-weight: 600; color: #c084fc; }
+
+  /* FAB */
+  .fab {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: #7c3aed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.5);
+    line-height: 1;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    background: #0a0a14;
+    border-top: 0.5px solid #1a1a2e;
+    display: flex;
+    padding: 6px 0 4px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-icon svg { width: 16px; height: 16px; }
+  .nav-lbl { font-size: 9px; color: #3d3562; }
+  .nav-lbl.active { color: #c084fc; }
+  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #c084fc; }
+
+  /* Section title */
+  .sec-title {
+    font-size: 9px;
+    color: #4e4670;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 10px 0 5px;
+  }
+
+  /* Category cards */
+  .cat-card {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 7px;
+  }
+  .cat-header { display: flex; justify-content: space-between; align-items: center; }
+  .cat-name { font-size: 13px; color: #ddd6ff; font-weight: 500; }
+  .cat-sub-count { font-size: 10px; color: #4e4670; margin-top: 2px; }
+  .cat-actions { display: flex; gap: 6px; align-items: center; }
+  .badge {
+    background: #231d40;
+    border: 0.5px solid #3d3268;
+    border-radius: 4px;
+    color: #7c6cc4;
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  .chevron { font-size: 11px; color: #3d3268; }
+  .subcat-list {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 0.5px solid #1e1e35;
+  }
+  .subcat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+  }
+  .subcat-item span:first-child { font-size: 11px; color: #9080c4; }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .stat-card {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 10px;
+    padding: 8px 10px;
+    flex: 1;
+  }
+  .stat-lbl { font-size: 9px; color: #4e4670; }
+  .stat-val { font-size: 15px; font-weight: 600; color: #c084fc; margin-top: 2px; }
+
+  /* Month table */
+  .month-card {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 7px;
+  }
+  .month-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 0.5px solid #1a1a2e;
+  }
+  .month-row:last-child { border-bottom: none; }
+  .month-row span:first-child { font-size: 11px; color: #9080c4; }
+  .month-row span:last-child { font-size: 11px; color: #ddd6ff; }
+
+  /* Category breakdown table */
+  .tbl-wrap {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 7px;
+  }
+  .cat-tbl { width: 100%; border-collapse: collapse; }
+  .cat-tbl th {
+    font-size: 8px;
+    color: #4e4670;
+    font-weight: 600;
+    text-align: right;
+    padding: 6px 6px;
+    border-bottom: 0.5px solid #1e1e35;
+    white-space: nowrap;
+  }
+  .cat-tbl th:first-child { text-align: left; padding-left: 10px; }
+  .cat-tbl td {
+    font-size: 9px;
+    color: #c0b8e0;
+    text-align: right;
+    padding: 4px 6px;
+    border-bottom: 0.5px solid #14121f;
+    white-space: nowrap;
+  }
+  .cat-tbl td:first-child { text-align: left; color: #9080c4; padding-left: 10px; }
+  .cat-tbl tr:last-child td { border-bottom: none; color: #e8e0ff; font-weight: 600; }
+  .cat-tbl tr:last-child td:first-child { color: #c084fc; }
+
+  /* Pie */
+  .pie-block {
+    background: #1a1730;
+    border: 0.5px solid #27234a;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .legend { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .leg-row { display: flex; align-items: center; gap: 5px; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .leg-txt { font-size: 9px; color: #9080c4; }
+
+  /* Profile */
+  .avatar {
+    width: 56px; height: 56px; border-radius: 28px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: white; font-weight: 600;
+    margin: 8px auto 6px;
+  }
+  .profile-name { text-align: center; font-size: 15px; color: #ddd6ff; font-weight: 500; }
+  .profile-email { text-align: center; font-size: 11px; color: #4e4670; margin-top: 2px; }
+  .profile-rows { margin-top: 16px; }
+  .profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 0.5px solid #1a1a2e;
+  }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row .plbl { font-size: 12px; color: #9080c4; }
+  .profile-row .pval { font-size: 11px; color: #5a5278; }
+  .profile-row a { font-size: 11px; color: #7c55d4; text-decoration: none; border-bottom: 0.5px solid #7c55d4; }
+
+  /* Bottom sheet overlay */
+  .sheet-overlay {
+    position: absolute; inset: 0;
+    background: rgba(10,10,20,0.7);
+    display: flex; align-items: flex-end;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .bottom-sheet {
+    background: #1a1730;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 16px 20px;
+    width: 100%;
+    border-top: 0.5px solid #3d3268;
+  }
+  .sheet-handle {
+    width: 36px; height: 3px;
+    background: #3d3268;
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+  .sheet-title { font-size: 14px; color: #ddd6ff; font-weight: 500; margin-bottom: 14px; }
+  .field-label { font-size: 10px; color: #4e4670; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field-input {
+    background: #12121f;
+    border: 0.5px solid #27234a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #ddd6ff;
+    width: 100%;
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .field-input.big { font-size: 18px; font-weight: 600; color: #c084fc; }
+  .fields-row { display: flex; gap: 8px; }
+  .fields-row > div { flex: 1; }
+  .save-btn {
+    background: #7c3aed;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: white;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spending Tracker</h1>
+<p class="subtitle">UI Mockup — все экраны — тёмная тема</p>
+
+<div class="screens-grid">
+
+  <!-- SCREEN 1: Расходы -->
+  <div class="screen-block">
+    <div class="screen-label">Расходы</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="topbar">
+          <div class="topbar-row">
+            <h2>Расходы</h2>
+            <div class="filter-btn">Апрель 2026 ▾</div>
+          </div>
+          <p>Транзакций: 4</p>
+        </div>
+        <div class="content">
+          <div class="tx-card">
+            <div>
+              <div class="tx-cat">Еда</div>
+              <div class="tx-subcat">Рестораны</div>
+              <div class="tx-comment">Обед с коллегами</div>
+              <div class="tx-date">15 апр 2026</div>
+            </div>
+            <div class="tx-amount">3 500 ₽</div>
+          </div>
+          <div class="tx-card">
+            <div>
+              <div class="tx-cat">Транспорт</div>
+              <div class="tx-subcat">Такси</div>
+              <div class="tx-comment">До аэропорта</div>
+              <div class="tx-date">14 апр 2026</div>
+            </div>
+            <div class="tx-amount">1 200 ₽</div>
+          </div>
+          <div class="tx-card">
+            <div>
+              <div class="tx-cat">Покупки</div>
+              <div class="tx-subcat">Одежда</div>
+              <div class="tx-comment"></div>
+              <div class="tx-date">12 апр 2026</div>
+            </div>
+            <div class="tx-amount">8 900 ₽</div>
+          </div>
+          <div class="tx-card">
+            <div>
+              <div class="tx-cat">Еда</div>
+              <div class="tx-subcat">Продукты</div>
+              <div class="tx-comment">Пятёрочка</div>
+              <div class="tx-date">11 апр 2026</div>
+            </div>
+            <div class="tx-amount">2 340 ₽</div>
+          </div>
+          <div class="fab">+</div>
+        </div>
+        <div class="total-bar">
+          <span>Итого за месяц</span>
+          <span>15 940 ₽</span>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-lbl active">Расходы</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div class="nav-lbl">Категории</div></div>
+          <div class="nav-item"><div class="nav-lbl">Сводка</div></div>
+          <div class="nav-item"><div class="nav-lbl">Профиль</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Добавить расход (bottom sheet) -->
+  <div class="screen-block">
+    <div class="screen-label">Добавить расход</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="topbar">
+          <div class="topbar-row">
+            <h2>Расходы</h2>
+            <div class="filter-btn">Апрель 2026 ▾</div>
+          </div>
+          <p>Транзакций: 4</p>
+        </div>
+        <div class="content" style="position:relative;">
+          <div class="tx-card" style="opacity:0.3">
+            <div><div class="tx-cat">Еда</div><div class="tx-subcat">Рестораны</div></div>
+            <div class="tx-amount">3 500 ₽</div>
+          </div>
+          <div class="tx-card" style="opacity:0.3">
+            <div><div class="tx-cat">Транспорт</div><div class="tx-subcat">Такси</div></div>
+            <div class="tx-amount">1 200 ₽</div>
+          </div>
+          <div class="sheet-overlay">
+            <div class="bottom-sheet">
+              <div class="sheet-handle"></div>
+              <div class="sheet-title">Новый расход</div>
+              <div class="field-label">Сумма</div>
+              <div class="field-input big">3 500 ₽</div>
+              <div class="fields-row">
+                <div>
+                  <div class="field-label">Категория</div>
+                  <div class="field-input">Еда ▾</div>
+                </div>
+                <div>
+                  <div class="field-label">Подкатегория</div>
+                  <div class="field-input">Рестораны ▾</div>
+                </div>
+              </div>
+              <div class="field-label">Комментарий</div>
+              <div class="field-input">Обед с коллегами</div>
+              <div class="save-btn">Сохранить</div>
+            </div>
+          </div>
+        </div>
+        <div class="total-bar">
+          <span>Итого за месяц</span><span>15 940 ₽</span>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-lbl active">Расходы</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div class="nav-lbl">Категории</div></div>
+          <div class="nav-item"><div class="nav-lbl">Сводка</div></div>
+          <div class="nav-item"><div class="nav-lbl">Профиль</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Категории -->
+  <div class="screen-block">
+    <div class="screen-label">Категории</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="topbar"><h2>Категории</h2></div>
+        <div class="content">
+          <div class="cat-card">
+            <div class="cat-header">
+              <div>
+                <div class="cat-name">Еда</div>
+                <div class="cat-sub-count">3 подкатегории</div>
+              </div>
+              <div class="cat-actions">
+                <span class="badge">изм.</span>
+                <span class="chevron">▾</span>
+              </div>
+            </div>
+            <div class="subcat-list">
+              <div class="subcat-item"><span>Рестораны</span><span class="badge">изм.</span></div>
+              <div class="subcat-item"><span>Продукты</span><span class="badge">изм.</span></div>
+              <div class="subcat-item"><span>Кафе</span><span class="badge">изм.</span></div>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-header">
+              <div>
+                <div class="cat-name">Транспорт</div>
+                <div class="cat-sub-count">2 подкатегории</div>
+              </div>
+              <div class="cat-actions">
+                <span class="badge">изм.</span>
+                <span class="chevron">▸</span>
+              </div>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-header">
+              <div>
+                <div class="cat-name">Покупки</div>
+                <div class="cat-sub-count">4 подкатегории</div>
+              </div>
+              <div class="cat-actions">
+                <span class="badge">изм.</span>
+                <span class="chevron">▸</span>
+              </div>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-header">
+              <div>
+                <div class="cat-name">Развлечения</div>
+                <div class="cat-sub-count">2 подкатегории</div>
+              </div>
+              <div class="cat-actions">
+                <span class="badge">изм.</span>
+                <span class="chevron">▸</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-lbl">Расходы</div></div>
+          <div class="nav-item"><div class="nav-lbl active">Категории</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div class="nav-lbl">Сводка</div></div>
+          <div class="nav-item"><div class="nav-lbl">Профиль</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Сводка -->
+  <div class="screen-block">
+    <div class="screen-label">Сводка</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="topbar">
+          <div class="topbar-row">
+            <h2>Сводка</h2>
+            <div class="filter-btn">2026 ▾</div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-lbl">Этот месяц</div><div class="stat-val">15 940 ₽</div></div>
+            <div class="stat-card"><div class="stat-lbl">Год</div><div class="stat-val">98 200 ₽</div></div>
+          </div>
+
+          <div class="sec-title">По месяцам</div>
+          <div class="month-card">
+            <div class="month-row"><span>Январь</span><span>22 400 ₽</span></div>
+            <div class="month-row"><span>Февраль</span><span>18 700 ₽</span></div>
+            <div class="month-row"><span>Март</span><span>21 160 ₽</span></div>
+            <div class="month-row"><span>Апрель</span><span>15 940 ₽</span></div>
+          </div>
+
+          <div class="sec-title">По категориям с разбивкой</div>
+          <div class="tbl-wrap">
+            <table class="cat-tbl">
+              <thead>
+                <tr>
+                  <th>Категория</th>
+                  <th>Янв</th>
+                  <th>Фев</th>
+                  <th>Мар</th>
+                  <th>Апр</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Еда</td><td>9 800</td><td>8 200</td><td>9 500</td><td>7 200</td></tr>
+                <tr><td>Покупки</td><td>7 100</td><td>5 900</td><td>6 800</td><td>5 400</td></tr>
+                <tr><td>Транспорт</td><td>3 200</td><td>2 800</td><td>3 060</td><td>2 040</td></tr>
+                <tr><td>Прочее</td><td>2 300</td><td>1 800</td><td>1 800</td><td>1 300</td></tr>
+                <tr><td>Итого</td><td>22 400</td><td>18 700</td><td>21 160</td><td>15 940</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sec-title">Диаграмма по категориям</div>
+          <div class="pie-block">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle cx="38" cy="38" r="26" fill="none" stroke="#7c3aed" stroke-width="14" stroke-dasharray="73 163" stroke-dashoffset="0"></circle>
+              <circle cx="38" cy="38" r="26" fill="none" stroke="#4f46e5" stroke-width="14" stroke-dasharray="46 163" stroke-dashoffset="-73"></circle>
+              <circle cx="38" cy="38" r="26" fill="none" stroke="#9333ea" stroke-width="14" stroke-dasharray="28 163" stroke-dashoffset="-119"></circle>
+              <circle cx="38" cy="38" r="26" fill="none" stroke="#2d2060" stroke-width="14" stroke-dasharray="16 163" stroke-dashoffset="-147"></circle>
+            </svg>
+            <div class="legend">
+              <div class="leg-row"><div class="leg-dot" style="background:#7c3aed"></div><span class="leg-txt">Еда — 45% (34 700 ₽)</span></div>
+              <div class="leg-row"><div class="leg-dot" style="background:#4f46e5"></div><span class="leg-txt">Покупки — 28% (25 200 ₽)</span></div>
+              <div class="leg-row"><div class="leg-dot" style="background:#9333ea"></div><span class="leg-txt">Транспорт — 17% (11 100 ₽)</span></div>
+              <div class="leg-row"><div class="leg-dot" style="background:#2d2060"></div><span class="leg-txt">Прочее — 10% (7 200 ₽)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-lbl">Расходы</div></div>
+          <div class="nav-item"><div class="nav-lbl">Категории</div></div>
+          <div class="nav-item"><div class="nav-lbl active">Сводка</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div class="nav-lbl">Профиль</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: Профиль -->
+  <div class="screen-block">
+    <div class="screen-label">Профиль</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="topbar"><h2>Профиль</h2></div>
+        <div class="content" style="padding-top:20px">
+          <div class="avatar">АИ</div>
+          <div class="profile-name">Арсен Иванов</div>
+          <div class="profile-email">arsen@example.com</div>
+          <div class="profile-rows">
+            <div class="profile-row">
+              <span class="plbl">Email</span>
+              <span class="pval">arsen@example.com</span>
+            </div>
+            <div class="profile-row">
+              <span class="plbl">Google Таблица</span>
+              <a href="file:///C:/Users/arsen/Downloads/spending_tracker_mockup.html#">Открыть →</a>
+            </div>
+            <div class="profile-row">
+              <span class="plbl">Ссылка на таблицу</span>
+              <span class="pval" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">docs.google.com/spreadsheets/...</span>
+            </div>
+            <div class="profile-row">
+              <span class="plbl">Редактировать ссылку</span>
+              <span style="font-size:11px;color:#7c55d4">изменить</span>
+            </div>
+            <div class="profile-row">
+              <span class="plbl">Версия</span>
+              <span class="pval">v0.0.1 MVP1</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-lbl">Расходы</div></div>
+          <div class="nav-item"><div class="nav-lbl">Категории</div></div>
+          <div class="nav-item"><div class="nav-lbl">Сводка</div></div>
+          <div class="nav-item"><div class="nav-lbl active">Профиль</div><div class="nav-dot"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;font-size:11px;color:#2d2a4a;margin-top:40px">Spending Tracker v0.0.1 MVP1 · UI Reference Mockup</p>
+
+
+
+</body></html>
