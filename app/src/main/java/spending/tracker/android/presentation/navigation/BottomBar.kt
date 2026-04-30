@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import spending.tracker.android.presentation.theme.NavigationBarBackground
 
 /**
  * Нижняя навигация с 4 вкладками из [Destination.bottomBarItems].
@@ -30,7 +31,7 @@ fun BottomBar(navController: NavHostController) {
     if (!showBottomBar) return
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = NavigationBarBackground,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
             Destination.bottomBarItems.forEach { item ->

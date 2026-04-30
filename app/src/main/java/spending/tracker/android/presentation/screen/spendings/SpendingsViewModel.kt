@@ -32,6 +32,7 @@ data class DateRange(
 /** Состояние экрана «Расходы». */
 data class SpendingsUiState(
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val spendings: List<Spending> = emptyList(),
     val categories: Map<Long, Category> = emptyMap(),
     val period: PeriodFilter = PeriodFilter.Today,
@@ -48,6 +49,7 @@ data class SpendingsUiState(
                     PeriodFilter.Week -> spending.date >= today.minusDays(6)
                     PeriodFilter.Month -> spending.date.year == today.year &&
                             spending.date.month == today.month
+
                     PeriodFilter.Year -> spending.date.year == today.year
                     PeriodFilter.Custom -> {
                         customDateRange?.let { range ->
@@ -76,6 +78,7 @@ class SpendingsViewModel(
     private val period = MutableStateFlow(PeriodFilter.Today)
     private val customDateRange = MutableStateFlow<DateRange?>(null)
     private val error = MutableStateFlow<String?>(null)
+    private val isRefreshing = MutableStateFlow(false)
 
     /** Текущий email пользователя (идентификатор на бэке). */
     val currentUserEmail: StateFlow<String?> = observeCurrentUser()
@@ -96,9 +99,18 @@ class SpendingsViewModel(
         period,
         customDateRange,
         error,
-    ) { spendings, categories, p, range, err ->
+        isRefreshing,
+    ) { array: Array<*> ->
+        @Suppress("UNCHECKED_CAST")
+        val spendings = array[0] as List<Spending>
+        val categories = array[1] as List<Category>
+        val p = array[2] as PeriodFilter
+        val range = array[3] as DateRange?
+        val err = array[4] as String?
+        val refreshing = array[5] as Boolean
         SpendingsUiState(
             isLoading = false,
+            isRefreshing = refreshing,
             spendings = spendings.sortedByDescending { it.date },
             categories = categories.associateBy { it.id },
             period = p,
@@ -136,10 +148,21 @@ class SpendingsViewModel(
     }
 
     fun onRefresh() {
+        val email = currentUserEmail.value
+        if (email == null) {
+            isRefreshing.value = false
+            return
+        }
         viewModelScope.launch {
-            val email = currentUserEmail.value ?: return@launch
-            refreshSpendings(email).onFailure { error.value = it.message }
-            refreshCategories(email).onFailure { error.value = it.message }
+            isRefreshing.value = true
+            try {
+                refreshSpendings(email).getOrThrow()
+                refreshCategories(email).getOrThrow()
+            } catch (e: Exception) {
+                error.value = e.message
+            } finally {
+                isRefreshing.value = false
+            }
         }
     }
 
@@ -148,9 +171,5 @@ class SpendingsViewModel(
             val email = currentUserEmail.value ?: return@launch
             deleteSpending(email, id).onFailure { error.value = it.message }
         }
-    }
-
-    fun clearError() {
-        error.value = null
     }
 }

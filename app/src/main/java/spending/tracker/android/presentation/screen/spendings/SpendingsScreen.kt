@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.DatePicker
@@ -30,10 +28,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,21 +61,12 @@ fun SpendingsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddSheet by remember { mutableStateOf(false) }
+
     /** Не-null → открыт sheet редактирования для этого id. */
     var editingSpendingId by remember { mutableStateOf<Long?>(null) }
 
-    var isRefreshing by remember { mutableStateOf(false) }
-    val pullToRefreshState = rememberPullToRefreshState()
-
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
-
-    // Управление состоянием обновления
-    LaunchedEffect(state.isLoading) {
-        if (!state.isLoading) {
-            isRefreshing = false
-        }
-    }
 
     Scaffold(
         modifier = modifier,
@@ -134,7 +121,8 @@ fun SpendingsScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = state.customDateRange?.startDate?.format(displayDateFormatter) ?: "Начало",
+                            text = state.customDateRange?.startDate?.format(displayDateFormatter)
+                                ?: "Начало",
                         )
                     }
                     Text("—")
@@ -149,19 +137,16 @@ fun SpendingsScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = state.customDateRange?.endDate?.format(displayDateFormatter) ?: LocalDate.now().format(displayDateFormatter),
+                            text = state.customDateRange?.endDate?.format(displayDateFormatter)
+                                ?: LocalDate.now().format(displayDateFormatter),
                         )
                     }
                 }
             }
 
             PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    viewModel.onRefresh()
-                },
-                state = pullToRefreshState,
+                isRefreshing = state.isRefreshing,
+                onRefresh = { viewModel.onRefresh() },
                 modifier = Modifier.weight(1f),
             ) {
                 if (state.filteredSpendings.isEmpty()) {

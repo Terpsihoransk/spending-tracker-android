@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -99,27 +100,31 @@ fun SummaryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        if (state.totalAll == 0.0) {
-            Box(
-                Modifier.padding(padding).fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                EmptyState(
-                    title = "Нет данных",
-                    subtitle = "Добавьте несколько расходов, чтобы увидеть сводку",
-                )
-            }
-            return@Scaffold
-        }
-
-        Column(
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh() },
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .fillMaxSize(),
         ) {
+            if (state.totalAll == 0.0) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EmptyState(
+                        title = "Нет данных",
+                        subtitle = "Добавьте несколько расходов, чтобы увидеть сводку",
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
             // --- Период фильтр ---
             SummaryPeriodChips(
                 selected = state.selectedPeriod,
@@ -216,50 +221,23 @@ fun SummaryScreen(
             // --- Расходы по категориям ---
             if (state.periodCategories.isNotEmpty()) {
                 SectionCard(title = "Расходы по категориям") {
-                    Column(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    ) {
+                    state.periodCategories.forEachIndexed { index, catTotal ->
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                text = "Категория",
-                                modifier = Modifier.width(120.dp),
-                                style = MaterialTheme.typography.labelSmall,
+                                text = catTotal.category.name,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
-                                text = "Сумма",
-                                modifier = Modifier.width(100.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = formatMoney(catTotal.total),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-                        state.periodCategories.forEach { catTotal ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = catTotal.category.name,
-                                    modifier = Modifier.width(120.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Text(
-                                    text = formatMoney(catTotal.total),
-                                    modifier = Modifier.width(100.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
                         }
                     }
                 }
@@ -307,6 +285,8 @@ fun SummaryScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+                }
+            }
         }
 
         // --- Dialog для деталей категории ---
