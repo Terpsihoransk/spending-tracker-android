@@ -115,6 +115,11 @@ class SummaryViewModel(
 
     fun onPeriodChanged(period: SummaryPeriod) {
         _selectedPeriod.value = period
+        // При выборе "Свой период" устанавливаем диапазон по умолчанию: сегодня—сегодня
+        if (period == SummaryPeriod.Custom && _customDateRange.value == null) {
+            val today = LocalDate.now()
+            _customDateRange.value = DateRange(today, today)
+        }
     }
 
     fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {

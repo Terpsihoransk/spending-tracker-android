@@ -14,12 +14,11 @@ import androidx.compose.ui.unit.dp
 
 /** Доступные периоды фильтрации расходов. */
 enum class PeriodFilter(val title: String) {
-    Today("Сегодня"),
+    Today("День"),
     Week("Неделя"),
     Month("Месяц"),
     Year("Год"),
-    All("Всё"),
-    Custom("Свой"),
+    Custom("Свой период"),
 }
 
 @Composable

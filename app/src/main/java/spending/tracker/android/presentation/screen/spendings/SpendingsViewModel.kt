@@ -49,7 +49,6 @@ data class SpendingsUiState(
                     PeriodFilter.Month -> spending.date.year == today.year &&
                             spending.date.month == today.month
                     PeriodFilter.Year -> spending.date.year == today.year
-                    PeriodFilter.All -> true
                     PeriodFilter.Custom -> {
                         customDateRange?.let { range ->
                             spending.date >= range.startDate && spending.date <= range.endDate
@@ -125,6 +124,11 @@ class SpendingsViewModel(
 
     fun onPeriodChanged(newPeriod: PeriodFilter) {
         period.value = newPeriod
+        // При выборе "Свой период" устанавливаем диапазон по умолчанию: сегодня—сегодня
+        if (newPeriod == PeriodFilter.Custom && customDateRange.value == null) {
+            val today = LocalDate.now()
+            customDateRange.value = DateRange(today, today)
+        }
     }
 
     fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {
