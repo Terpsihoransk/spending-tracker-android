@@ -181,12 +181,20 @@ class CategoriesViewModel(
     }
 
     fun refresh() {
-        val email = userEmail.value ?: return
+        val email = userEmail.value
+        if (email == null) {
+            isRefreshing.value = false
+            return
+        }
         viewModelScope.launch {
             isRefreshing.value = true
-            refreshCategories(email)
-                .onFailure { error.value = it.message }
-            isRefreshing.value = false
+            try {
+                refreshCategories(email).getOrThrow()
+            } catch (e: Exception) {
+                error.value = e.message
+            } finally {
+                isRefreshing.value = false
+            }
         }
     }
 }

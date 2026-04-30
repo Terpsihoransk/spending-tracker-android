@@ -1,11 +1,14 @@
 package spending.tracker.android.presentation.components
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -33,22 +36,27 @@ fun StatCard(
         ),
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleMedium,
                 color = accentColor,
+                maxLines = 1,
             )
         }
     }
 }
 
-/** Горизонтальный ряд из двух или трёх [StatCard]. */
+/**
+ * Горизонтальный ряд из двух или трёх [StatCard].
+ * При трёх колонках на узких экранах (< 360dp) включается горизонтальный скролл.
+ */
 @Composable
 fun StatRow(
     left: @Composable () -> Unit,
@@ -58,13 +66,16 @@ fun StatRow(
     modifier: Modifier = Modifier,
 ) {
     if (showThreeColumns) {
+        // На узких экранах разрешаем горизонтальный скролл, чтобы карточки не сжимались
         Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Box(modifier = Modifier.weight(1f)) { left() }
-            Box(modifier = Modifier.weight(1f)) { middle() }
-            Box(modifier = Modifier.weight(1f)) { right() }
+            Box(modifier = Modifier.width(100.dp)) { left() }
+            Box(modifier = Modifier.width(100.dp)) { middle() }
+            Box(modifier = Modifier.width(100.dp)) { right() }
         }
     } else {
         Row(

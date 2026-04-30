@@ -26,8 +26,8 @@ import spending.tracker.android.domain.usecase.ClearUserUseCase
 import spending.tracker.android.domain.usecase.DeleteCategoryUseCase
 import spending.tracker.android.domain.usecase.DeleteSpendingUseCase
 import spending.tracker.android.domain.usecase.DeleteSubCategoryUseCase
-import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
+import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
@@ -118,10 +118,11 @@ val appModule = module {
             getSpendingById = get(),
             addCategoryUseCase = get(),
             addSubCategoryUseCase = get(),
+            deleteSpendingUseCase = get(),
         )
     }
     viewModelOf(::CategoriesViewModel)
     viewModelOf(::SummaryViewModel)
-    viewModelOf(::ProfileViewModel)
-    viewModelOf(::EmailEntryViewModel)
+    viewModel { ProfileViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { EmailEntryViewModel(get(), get()) }
 }

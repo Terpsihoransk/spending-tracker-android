@@ -14,8 +14,8 @@ android {
         applicationId = "spending.tracker.android"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toInt() ?: 1
+        versionName = project.findProperty("APP_VERSION_NAME") as? String ?: "0.0.1"
 
     }
 
