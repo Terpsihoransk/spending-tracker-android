@@ -145,37 +145,57 @@ fun AddSpendingSheet(
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 24.dp),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = {
-                    scope.launch { sheetState.hide() }
-                    viewModel.reset()
-                    onDismiss()
-                }) {
-                    Text("Отмена")
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    enabled = state.canSubmit,
-                    onClick = {
-                        viewModel.submit {
+                // Левая часть: кнопка Удалить (только в режиме редактирования)
+                if (state.isEditMode) {
+                    TextButton(onClick = {
+                        viewModel.deleteSpending {
                             scope.launch { sheetState.hide() }
                             onDismiss()
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(
-                        when {
-                            state.isSubmitting -> "Сохранение…"
-                            state.isEditMode -> "Сохранить"
-                            else -> "Добавить"
-                        }
-                    )
+                    }) {
+                        Text(
+                            text = "Удалить",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.width(1.dp))
+                }
+
+                // Правая часть: Отмена и Сохранить/Добавить
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = {
+                        scope.launch { sheetState.hide() }
+                        viewModel.reset()
+                        onDismiss()
+                    }) {
+                        Text("Отмена")
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        enabled = state.canSubmit,
+                        onClick = {
+                            viewModel.submit {
+                                scope.launch { sheetState.hide() }
+                                onDismiss()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                    ) {
+                        Text(
+                            when {
+                                state.isSubmitting -> "Сохранение…"
+                                state.isEditMode -> "Сохранить"
+                                else -> "Добавить"
+                            }
+                        )
+                    }
                 }
             }
         }

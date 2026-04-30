@@ -90,65 +90,61 @@ fun SpendingsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.onRefresh() },
+            modifier = Modifier.padding(padding).fillMaxSize(),
         ) {
-            PeriodFilterChips(
-                selected = state.period,
-                onSelectedChange = viewModel::onPeriodChanged,
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                PeriodFilterChips(
+                    selected = state.period,
+                    onSelectedChange = viewModel::onPeriodChanged,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
 
-            // --- Кастомный период ---
-            if (state.period == PeriodFilter.Custom) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedButton(
-                        onClick = { showStartDatePicker = true },
-                        modifier = Modifier.weight(1f),
+                // --- Кастомный период ---
+                if (state.period == PeriodFilter.Custom) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = state.customDateRange?.startDate?.format(displayDateFormatter)
-                                ?: "Начало",
-                        )
-                    }
-                    Text("—")
-                    OutlinedButton(
-                        onClick = { showEndDatePicker = true },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = state.customDateRange?.endDate?.format(displayDateFormatter)
-                                ?: LocalDate.now().format(displayDateFormatter),
-                        )
+                        OutlinedButton(
+                            onClick = { showStartDatePicker = true },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = state.customDateRange?.startDate?.format(displayDateFormatter)
+                                    ?: "Начало",
+                            )
+                        }
+                        Text("—")
+                        OutlinedButton(
+                            onClick = { showEndDatePicker = true },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = state.customDateRange?.endDate?.format(displayDateFormatter)
+                                    ?: LocalDate.now().format(displayDateFormatter),
+                            )
+                        }
                     }
                 }
-            }
 
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = { viewModel.onRefresh() },
-                modifier = Modifier.weight(1f),
-            ) {
                 if (state.filteredSpendings.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         EmptyState(
@@ -158,6 +154,7 @@ fun SpendingsScreen(
                     }
                 } else {
                     LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         items(state.filteredSpendings, key = { it.id }) { spending ->

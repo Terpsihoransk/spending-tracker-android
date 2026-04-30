@@ -118,6 +118,7 @@ val appModule = module {
             getSpendingById = get(),
             addCategoryUseCase = get(),
             addSubCategoryUseCase = get(),
+            deleteSpendingUseCase = get(),
         )
     }
     viewModelOf(::CategoriesViewModel)
