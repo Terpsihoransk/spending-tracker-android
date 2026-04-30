@@ -23,12 +23,20 @@ import spending.tracker.android.domain.usecase.RefreshSpendingsUseCase
 import spending.tracker.android.presentation.components.PeriodFilter
 import java.time.LocalDate
 
+/** Диапазон дат для custom периода. */
+data class DateRange(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+)
+
 /** Состояние экрана «Расходы». */
 data class SpendingsUiState(
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val spendings: List<Spending> = emptyList(),
     val categories: Map<Long, Category> = emptyMap(),
     val period: PeriodFilter = PeriodFilter.Today,
+    val customDateRange: DateRange? = null,
     val errorMessage: String? = null,
 ) {
     /** Отфильтрованный по [period] список. */
@@ -41,7 +49,13 @@ data class SpendingsUiState(
                     PeriodFilter.Week -> spending.date >= today.minusDays(6)
                     PeriodFilter.Month -> spending.date.year == today.year &&
                             spending.date.month == today.month
-                    PeriodFilter.All -> true
+
+                    PeriodFilter.Year -> spending.date.year == today.year
+                    PeriodFilter.Custom -> {
+                        customDateRange?.let { range ->
+                            spending.date >= range.startDate && spending.date <= range.endDate
+                        } ?: true
+                    }
                 }
             }
         }
@@ -62,7 +76,9 @@ class SpendingsViewModel(
 ) : ViewModel() {
 
     private val period = MutableStateFlow(PeriodFilter.Today)
+    private val customDateRange = MutableStateFlow<DateRange?>(null)
     private val error = MutableStateFlow<String?>(null)
+    private val isRefreshing = MutableStateFlow(false)
 
     /** Текущий email пользователя (идентификатор на бэке). */
     val currentUserEmail: StateFlow<String?> = observeCurrentUser()
@@ -81,13 +97,24 @@ class SpendingsViewModel(
         spendingsFlow,
         categoriesFlow,
         period,
+        customDateRange,
         error,
-    ) { spendings, categories, p, err ->
+        isRefreshing,
+    ) { array: Array<*> ->
+        @Suppress("UNCHECKED_CAST")
+        val spendings = array[0] as List<Spending>
+        val categories = array[1] as List<Category>
+        val p = array[2] as PeriodFilter
+        val range = array[3] as DateRange?
+        val err = array[4] as String?
+        val refreshing = array[5] as Boolean
         SpendingsUiState(
             isLoading = false,
+            isRefreshing = refreshing,
             spendings = spendings.sortedByDescending { it.date },
             categories = categories.associateBy { it.id },
             period = p,
+            customDateRange = range,
             errorMessage = err,
         )
     }.stateIn(
@@ -109,13 +136,33 @@ class SpendingsViewModel(
 
     fun onPeriodChanged(newPeriod: PeriodFilter) {
         period.value = newPeriod
+        // При выборе "Свой период" устанавливаем диапазон по умолчанию: сегодня—сегодня
+        if (newPeriod == PeriodFilter.Custom && customDateRange.value == null) {
+            val today = LocalDate.now()
+            customDateRange.value = DateRange(today, today)
+        }
+    }
+
+    fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {
+        customDateRange.value = DateRange(startDate, endDate)
     }
 
     fun onRefresh() {
+        val email = currentUserEmail.value
+        if (email == null) {
+            isRefreshing.value = false
+            return
+        }
         viewModelScope.launch {
-            val email = currentUserEmail.value ?: return@launch
-            refreshSpendings(email).onFailure { error.value = it.message }
-            refreshCategories(email).onFailure { error.value = it.message }
+            isRefreshing.value = true
+            try {
+                refreshSpendings(email).getOrThrow()
+                refreshCategories(email).getOrThrow()
+            } catch (e: Exception) {
+                error.value = e.message
+            } finally {
+                isRefreshing.value = false
+            }
         }
     }
 
@@ -124,9 +171,5 @@ class SpendingsViewModel(
             val email = currentUserEmail.value ?: return@launch
             deleteSpending(email, id).onFailure { error.value = it.message }
         }
-    }
-
-    fun clearError() {
-        error.value = null
     }
 }

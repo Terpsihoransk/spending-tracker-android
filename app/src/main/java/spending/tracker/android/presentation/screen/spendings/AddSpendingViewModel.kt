@@ -19,6 +19,7 @@ import spending.tracker.android.domain.model.SubCategory
 import spending.tracker.android.domain.usecase.AddSpendingUseCase
 import spending.tracker.android.domain.usecase.AddSubCategoryUseCase
 import spending.tracker.android.domain.usecase.AddCategoryUseCase
+import spending.tracker.android.domain.usecase.DeleteSpendingUseCase
 import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
@@ -75,6 +76,7 @@ class AddSpendingViewModel(
     private val getSpendingById: GetSpendingByIdUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
     private val addSubCategoryUseCase: AddSubCategoryUseCase,
+    private val deleteSpendingUseCase: DeleteSpendingUseCase,
 ) : ViewModel() {
 
     private val edits = MutableStateFlow(
@@ -221,6 +223,25 @@ class AddSpendingViewModel(
     /** Сброс формы (после успешного сабмита / закрытия sheet). */
     fun reset() {
         edits.value = FormEdits(isEditMode = spendingId != null)
+    }
+
+    /** Удалить расход и закрыть sheet. */
+    fun deleteSpending(onSuccess: () -> Unit) {
+        val id = spendingId ?: return
+        val email = userEmail.value ?: return
+        viewModelScope.launch {
+            deleteSpendingUseCase(email, id).fold(
+                onSuccess = {
+                    reset()
+                    onSuccess()
+                },
+                onFailure = { err ->
+                    edits.update {
+                        it.copy(errorMessage = err.message ?: "Не удалось удалить")
+                    }
+                },
+            )
+        }
     }
 
     /** Попытка сабмита. [onSuccess] вызывается при успехе — для закрытия sheet. */

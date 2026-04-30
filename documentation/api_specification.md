@@ -32,8 +32,7 @@ Email валидируется через `ValidEmailHeader` аннотацие�
 **Request Body** — [`UserRequest`](../backend/src/main/java/spending/tracker/backend/dto/UserRequest.java):
 ```json
 {
-  "email": "user@example.com",
-  "googleSheetsId": "sheet123"
+  "email": "user@example.com"
 }
 ```
 

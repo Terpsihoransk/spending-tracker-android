@@ -11,11 +11,14 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.Spending
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
+import spending.tracker.android.domain.usecase.RefreshCategoriesUseCase
+import spending.tracker.android.domain.usecase.RefreshSpendingsUseCase
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -59,6 +62,8 @@ data class SummaryUiState(
     val showCategoryDetailsDialog: Boolean = false,
     /** Все расходы (для фильтрации по категории в popup). */
     val allSpendings: List<Spending> = emptyList(),
+    /** Флаг активности刷新 (pull-to-refresh). */
+    val isRefreshing: Boolean = false,
 )
 
 data class MonthTotal(
@@ -82,6 +87,8 @@ class SummaryViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val observeSpendings: ObserveSpendingsUseCase,
     private val observeCategories: ObserveCategoriesUseCase,
+    private val refreshSpendings: RefreshSpendingsUseCase,
+    private val refreshCategories: RefreshCategoriesUseCase,
 ) : ViewModel() {
 
     private val userEmail: StateFlow<String?> = observeCurrentUser()
@@ -99,14 +106,16 @@ class SummaryViewModel(
     private val _customDateRange = MutableStateFlow<DateRange?>(null)
     private val _showCategoryDetailsDialog = MutableStateFlow(false)
     private val _selectedCategoryForDetails = MutableStateFlow<Category?>(null)
+    private val isRefreshing = MutableStateFlow(false)
 
     val state: StateFlow<SummaryUiState> = combine(
         spendingsFlow,
         categoriesFlow,
         _selectedPeriod,
         _customDateRange,
-    ) { spendings, categories, period, customRange ->
-        buildSummary(spendings, categories, period, customRange)
+        isRefreshing,
+    ) { spendings, categories, period, customRange, refreshing ->
+        buildSummary(spendings, categories, period, customRange, refreshing)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -115,6 +124,11 @@ class SummaryViewModel(
 
     fun onPeriodChanged(period: SummaryPeriod) {
         _selectedPeriod.value = period
+        // При выборе "Свой период" устанавливаем диапазон по умолчанию: сегодня—сегодня
+        if (period == SummaryPeriod.Custom && _customDateRange.value == null) {
+            val today = LocalDate.now()
+            _customDateRange.value = DateRange(today, today)
+        }
     }
 
     fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {
@@ -139,6 +153,25 @@ class SummaryViewModel(
         _selectedCategoryForDetails.value = null
     }
 
+    fun refresh() {
+        val email = userEmail.value
+        if (email == null) {
+            isRefreshing.value = false
+            return
+        }
+        viewModelScope.launch {
+            isRefreshing.value = true
+            try {
+                refreshSpendings(email).getOrThrow()
+                refreshCategories(email).getOrThrow()
+            } catch (e: Exception) {
+                // Ошибка обрабатывается внутри getOrThrow() через Result
+            } finally {
+                isRefreshing.value = false
+            }
+        }
+    }
+
     private fun filterSpendingsByPeriod(
         spendings: List<Spending>,
         period: SummaryPeriod,
@@ -152,14 +185,17 @@ class SummaryViewModel(
                 val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
                 spendings.filter { it.date >= startOfWeek && it.date <= endOfWeek }
             }
+
             SummaryPeriod.Month -> {
                 val currentYm = YearMonth.now()
                 spendings.filter { YearMonth.from(it.date) == currentYm }
             }
+
             SummaryPeriod.Year -> {
                 val currentYear = today.year
                 spendings.filter { it.date.year == currentYear }
             }
+
             SummaryPeriod.Custom -> {
                 customRange?.let { range ->
                     spendings.filter { it.date >= range.startDate && it.date <= range.endDate }
@@ -184,11 +220,13 @@ class SummaryViewModel(
                     .takeWhile { it <= endYm }
                     .toList()
             }
+
             SummaryPeriod.Month -> listOf(YearMonth.now())
             SummaryPeriod.Year -> {
                 val currentYear = today.year
                 (1..12).map { YearMonth.of(currentYear, it) }
             }
+
             SummaryPeriod.Custom -> {
                 customRange?.let { range ->
                     val startYm = YearMonth.from(range.startDate)
@@ -206,11 +244,13 @@ class SummaryViewModel(
         categories: List<Category>,
         period: SummaryPeriod,
         customRange: DateRange?,
+        isRefreshing: Boolean,
     ): SummaryUiState {
         if (spendings.isEmpty()) return SummaryUiState(
             selectedPeriod = period,
             customDateRange = customRange,
             allSpendings = spendings,
+            isRefreshing = isRefreshing,
         )
 
         val today = LocalDate.now()
@@ -244,7 +284,8 @@ class SummaryViewModel(
         val byMonth = periodMonths.map { ym ->
             MonthTotal(
                 yearMonth = ym,
-                total = periodSpendings.filter { YearMonth.from(it.date) == ym }.sumOf { it.amount },
+                total = periodSpendings.filter { YearMonth.from(it.date) == ym }
+                    .sumOf { it.amount },
             )
         }
 
@@ -281,6 +322,7 @@ class SummaryViewModel(
             selectedPeriod = period,
             customDateRange = customRange,
             allSpendings = spendings,
+            isRefreshing = isRefreshing,
         )
     }
 }

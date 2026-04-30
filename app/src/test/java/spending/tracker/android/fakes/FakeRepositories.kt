@@ -27,7 +27,7 @@ class FakeSpendingRepository : SpendingRepository {
     var failDeleteWith: Throwable? = null
 
     fun seed(userEmail: String, spendings: List<Spending>) {
-        state.value = state.value + (userEmail to spendings)
+        state.value += (userEmail to spendings)
         nextId = (spendings.maxOfOrNull { it.id } ?: 0L) + 1
     }
 
@@ -59,7 +59,7 @@ class FakeSpendingRepository : SpendingRepository {
             userEmail = userEmail,
         )
         val current = state.value[userEmail].orEmpty()
-        state.value = state.value + (userEmail to (current + newSpending))
+        state.value += (userEmail to (current + newSpending))
         return Result.success(newSpending)
     }
 
@@ -81,15 +81,21 @@ class FakeSpendingRepository : SpendingRepository {
             subCategoryId = subCategoryId,
             description = description,
         )
-        state.value = state.value + (userEmail to current.map { if (it.id == id) updated else it })
+        state.value += (userEmail to current.map { if (it.id == id) updated else it })
         return Result.success(updated)
     }
 
     override suspend fun deleteSpending(userEmail: String, id: Long): Result<Unit> {
         failDeleteWith?.let { return Result.failure(it) }
         val current = state.value[userEmail].orEmpty()
-        state.value = state.value + (userEmail to current.filterNot { it.id == id })
+        state.value += (userEmail to current.filterNot { it.id == id })
         return Result.success(Unit)
+    }
+
+    override suspend fun getSpendingById(userEmail: String, id: Long): Result<Spending> {
+        val spending = state.value[userEmail]?.firstOrNull { it.id == id }
+        return spending?.let { Result.success(it) }
+            ?: Result.failure(NoSuchElementException("spending $id not found"))
     }
 }
 
@@ -117,7 +123,7 @@ class FakeCategoryRepository : CategoryRepository {
         failAddCategoryWith?.let { return Result.failure(it) }
         val cat = Category(id = nextId++, name = name, userEmail = userEmail)
         val current = categories.value[userEmail].orEmpty()
-        categories.value = categories.value + (userEmail to (current + cat))
+        categories.value += (userEmail to (current + cat))
         return Result.success(cat)
     }
 

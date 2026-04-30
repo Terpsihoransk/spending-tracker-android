@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -41,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.SubCategory
 
@@ -127,6 +129,7 @@ fun AddSpendingSheet(
                     label = { Text("Комментарий (необязательно)") },
                     singleLine = true,
                     supportingText = { Text("${state.description.length}/$MAX_DESCRIPTION_LENGTH") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -142,37 +145,57 @@ fun AddSpendingSheet(
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 24.dp),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = {
-                    scope.launch { sheetState.hide() }
-                    viewModel.reset()
-                    onDismiss()
-                }) {
-                    Text("Отмена")
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    enabled = state.canSubmit,
-                    onClick = {
-                        viewModel.submit {
+                // Левая часть: кнопка Удалить (только в режиме редактирования)
+                if (state.isEditMode) {
+                    TextButton(onClick = {
+                        viewModel.deleteSpending {
                             scope.launch { sheetState.hide() }
                             onDismiss()
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(
-                        when {
-                            state.isSubmitting -> "Сохранение…"
-                            state.isEditMode -> "Сохранить"
-                            else -> "Добавить"
-                        }
-                    )
+                    }) {
+                        Text(
+                            text = "Удалить",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.width(1.dp))
+                }
+
+                // Правая часть: Отмена и Сохранить/Добавить
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = {
+                        scope.launch { sheetState.hide() }
+                        viewModel.reset()
+                        onDismiss()
+                    }) {
+                        Text("Отмена")
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        enabled = state.canSubmit,
+                        onClick = {
+                            viewModel.submit {
+                                scope.launch { sheetState.hide() }
+                                onDismiss()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                    ) {
+                        Text(
+                            when {
+                                state.isSubmitting -> "Сохранение…"
+                                state.isEditMode -> "Сохранить"
+                                else -> "Добавить"
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -252,6 +275,7 @@ private fun CategoryDropdown(
                     onValueChange = { newCategoryName = it },
                     label = { Text("Название") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
@@ -366,6 +390,7 @@ private fun SubCategoryDropdown(
                     onValueChange = { newSubCategoryName = it },
                     label = { Text("Название") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
