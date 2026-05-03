@@ -21,11 +21,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import spending.tracker.android.domain.model.Category
+import java.math.BigDecimal
 
 /** Одна дольная секция диаграммы. */
 data class PieSlice(
     val label: String,
-    val value: Double,
+    val value: BigDecimal,
     val color: Color,
     val category: Category? = null,
 )
@@ -40,7 +41,8 @@ fun PieChartCanvas(
     modifier: Modifier = Modifier,
     strokeWidth: Float = 40f,
 ) {
-    val total = slices.sumOf { it.value }.takeIf { it > 0.0 } ?: 1.0
+    val total = slices.map { it.value }.reduceOrNull { acc, bd -> acc.add(bd) } ?: BigDecimal.ONE
+    val safeTotal = if (total > BigDecimal.ZERO) total else BigDecimal.ONE
     Canvas(modifier = modifier) {
         val diameter = size.minDimension - strokeWidth
         val topLeft = Offset(
@@ -51,7 +53,8 @@ fun PieChartCanvas(
 
         var startAngle = -90f
         slices.forEach { slice ->
-            val sweep = (slice.value / total * 360.0).toFloat()
+            val sweep = (slice.value.divide(safeTotal, 10, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal(360.0)).toFloat())
             drawArc(
                 color = slice.color,
                 startAngle = startAngle,
@@ -72,7 +75,8 @@ fun PieChartLegend(
     slices: List<PieSlice>,
     modifier: Modifier = Modifier,
 ) {
-    val total = slices.sumOf { it.value }.takeIf { it > 0.0 } ?: 1.0
+    val total = slices.map { it.value }.reduceOrNull { acc, bd -> acc.add(bd) } ?: BigDecimal.ONE
+    val safeTotal = if (total > BigDecimal.ZERO) total else BigDecimal.ONE
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -85,7 +89,8 @@ fun PieChartLegend(
                         .background(slice.color, CircleShape),
                 )
                 Spacer(Modifier.padding(horizontal = 4.dp))
-                val pct = (slice.value / total * 100).toInt()
+                val pct = slice.value.divide(safeTotal, 10, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal(100)).toInt()
                 Text(
                     text = "${slice.label} · $pct%",
                     style = MaterialTheme.typography.bodyMedium,

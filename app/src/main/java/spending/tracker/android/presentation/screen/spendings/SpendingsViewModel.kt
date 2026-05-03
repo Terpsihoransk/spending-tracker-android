@@ -61,7 +61,7 @@ data class SpendingsUiState(
         }
 
     /** Сумма за отфильтрованный период. */
-    val filteredTotal: Double
+    val filteredTotal: java.math.BigDecimal
         get() = filteredSpendings.sumOf { it.amount }
 }
 

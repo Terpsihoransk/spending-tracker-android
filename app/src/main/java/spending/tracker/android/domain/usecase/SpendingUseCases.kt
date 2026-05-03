@@ -3,6 +3,7 @@ package spending.tracker.android.domain.usecase
 import kotlinx.coroutines.flow.Flow
 import spending.tracker.android.domain.model.Spending
 import spending.tracker.android.domain.repository.SpendingRepository
+import java.math.BigDecimal
 
 /** Подписка на список расходов пользователя (из локального кэша). */
 class ObserveSpendingsUseCase(private val repository: SpendingRepository) {
@@ -26,7 +27,7 @@ class GetSpendingByIdUseCase(private val repository: SpendingRepository) {
 class AddSpendingUseCase(private val repository: SpendingRepository) {
     suspend operator fun invoke(
         userEmail: String,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
@@ -38,7 +39,7 @@ class UpdateSpendingUseCase(private val repository: SpendingRepository) {
     suspend operator fun invoke(
         userEmail: String,
         id: Long,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,

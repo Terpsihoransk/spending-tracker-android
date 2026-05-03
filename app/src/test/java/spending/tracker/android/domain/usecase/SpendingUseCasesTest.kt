@@ -12,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import spending.tracker.android.domain.model.Spending
 import spending.tracker.android.fakes.FakeSpendingRepository
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,7 +49,7 @@ class SpendingUseCasesTest {
     fun `ObserveSpendingsUseCase emits seeded data`() = runTest {
         val seed = Spending(
             id = 42,
-            amount = 100.0,
+            amount = BigDecimal("100.0"),
             categoryId = 1,
             categoryName = "Еда",
             subCategoryId = null,
@@ -67,11 +68,11 @@ class SpendingUseCasesTest {
 
     @Test
     fun `AddSpendingUseCase creates a new spending and it appears in observe`() = runTest {
-        val result = add(email, amount = 250.0, categoryId = 10, subCategoryId = null, description = "lunch")
+        val result = add(email, amount = BigDecimal("250.0"), categoryId = 10, subCategoryId = null, description = "lunch")
 
         assertTrue(result.isSuccess)
         val created = result.getOrNull()!!
-        assertEquals(250.0, created.amount, 0.001)
+        assertEquals(BigDecimal("250.0"), created.amount)
         assertEquals(10L, created.categoryId)
         assertEquals("lunch", created.description)
 
@@ -86,38 +87,38 @@ class SpendingUseCasesTest {
     @Test
     fun `AddSpendingUseCase propagates repository failure`() = runTest {
         repo.failAddWith = IllegalStateException("network down")
-        val result = add(email, amount = 1.0, categoryId = 1, subCategoryId = null, description = null)
+        val result = add(email, amount = BigDecimal.ONE, categoryId = 1, subCategoryId = null, description = null)
         assertTrue(result.isFailure)
         assertEquals("network down", result.exceptionOrNull()?.message)
     }
 
     @Test
     fun `UpdateSpendingUseCase changes amount and category`() = runTest {
-        val created = add(email, 100.0, categoryId = 1, subCategoryId = null, description = null).getOrThrow()
+        val created = add(email, BigDecimal("100.0"), categoryId = 1, subCategoryId = null, description = null).getOrThrow()
 
         val updated = update(
             userEmail = email,
             id = created.id,
-            amount = 500.0,
+            amount = BigDecimal("500.0"),
             categoryId = 2,
             subCategoryId = null,
             description = "updated",
         ).getOrThrow()
 
-        assertEquals(500.0, updated.amount, 0.001)
+        assertEquals(BigDecimal("500.0"), updated.amount)
         assertEquals(2L, updated.categoryId)
         assertEquals("updated", updated.description)
     }
 
     @Test
     fun `UpdateSpendingUseCase fails for missing id`() = runTest {
-        val result = update(email, id = 999, amount = 1.0, categoryId = 1, subCategoryId = null, description = null)
+        val result = update(email, id = 999, amount = BigDecimal.ONE, categoryId = 1, subCategoryId = null, description = null)
         assertTrue(result.isFailure)
     }
 
     @Test
     fun `DeleteSpendingUseCase removes spending`() = runTest {
-        val created = add(email, 100.0, 1, null, null).getOrThrow()
+        val created = add(email, BigDecimal("100.0"), 1, null, null).getOrThrow()
         assertTrue(delete(email, created.id).isSuccess)
 
         observe(email).test {
@@ -139,7 +140,7 @@ class SpendingUseCasesTest {
         observe(email).test {
             // Начальное пустое значение.
             assertEquals(emptyList<Spending>(), awaitItem())
-            add(email, 10.0, 1, null, null).getOrThrow()
+            add(email, BigDecimal("10.0"), 1, null, null).getOrThrow()
             val afterAdd = awaitItem()
             assertEquals(1, afterAdd.size)
             cancelAndIgnoreRemainingEvents()
@@ -148,7 +149,7 @@ class SpendingUseCasesTest {
 
     @Test
     fun `observe for different user is isolated`() = runTest {
-        add(email, 100.0, 1, null, null).getOrThrow()
+        add(email, BigDecimal("100.0"), 1, null, null).getOrThrow()
         observe("other@example.com").test {
             assertTrue(awaitItem().isEmpty())
             cancelAndIgnoreRemainingEvents()
@@ -161,8 +162,8 @@ class SpendingUseCasesTest {
 
     @Test
     fun `created spending has non-null id`() = runTest {
-        val first = add(email, 10.0, 1, null, null).getOrThrow()
-        val second = add(email, 20.0, 1, null, null).getOrThrow()
+        val first = add(email, BigDecimal("10.0"), 1, null, null).getOrThrow()
+        val second = add(email, BigDecimal("20.0"), 1, null, null).getOrThrow()
         assertNotNull(first.id)
         assertNotNull(second.id)
         assertTrue(second.id > first.id)

@@ -1,5 +1,8 @@
 package spending.tracker.android.presentation.components
 
+import java.math.BigDecimal
+import java.time.LocalDate
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,14 +31,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import spending.tracker.android.util.formatMoney
 import spending.tracker.android.util.formatRelativeDate
-import java.time.LocalDate
 
 /**
  * Одна строка-карточка списка расходов согласно мокапу.
  */
 @Composable
 fun SpendingCard(
-    amount: Double,
+    amount: BigDecimal,
     categoryName: String,
     subCategoryName: String?,
     description: String?,
@@ -106,7 +108,7 @@ fun SpendingCard(
 @Composable
 fun TotalBar(
     periodLabel: String,
-    total: Double,
+    total: BigDecimal,
     modifier: Modifier = Modifier,
 ) {
     Surface(

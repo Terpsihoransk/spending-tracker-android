@@ -12,6 +12,7 @@ import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.Spending
 import spending.tracker.android.domain.model.SubCategory
 import spending.tracker.android.domain.model.User
+import java.math.BigDecimal
 
 // ============ User ============
 fun UserResponse.toDomain() = User(
@@ -33,9 +34,16 @@ fun UserEntity.toDomain() = User(
 )
 
 // ============ Spending ============
+/**
+ * Парсит строку в BigDecimal.
+ * При невалидном значении выбрасывает [NumberFormatException],
+ * который будет пойман [runCatching] в репозитории.
+ */
+private fun String.parseAmount(): BigDecimal = BigDecimal(this)
+
 fun SpendingResponse.toDomain() = Spending(
     id = id,
-    amount = amount.toDoubleOrNull() ?: 0.0,
+    amount = amount.parseAmount(),
     categoryId = categoryId,
     categoryName = categoryName,
     subCategoryId = subcategoryId,
@@ -47,7 +55,7 @@ fun SpendingResponse.toDomain() = Spending(
 
 fun SpendingResponse.toEntity(synced: Boolean = true) = SpendingEntity(
     id = id,
-    amount = amount.toDoubleOrNull() ?: 0.0,
+    amount = amount, // уже строка от бэка
     categoryId = categoryId,
     categoryName = categoryName,
     subCategoryId = subcategoryId,
@@ -60,7 +68,7 @@ fun SpendingResponse.toEntity(synced: Boolean = true) = SpendingEntity(
 
 fun SpendingEntity.toDomain() = Spending(
     id = id,
-    amount = amount,
+    amount = amount.parseAmount(),
     categoryId = categoryId,
     categoryName = categoryName,
     subCategoryId = subCategoryId,
@@ -72,7 +80,7 @@ fun SpendingEntity.toDomain() = Spending(
 
 fun Spending.toEntity(synced: Boolean = true) = SpendingEntity(
     id = id,
-    amount = amount,
+    amount = amount.toPlainString(),
     categoryId = categoryId,
     categoryName = categoryName,
     subCategoryId = subCategoryId,

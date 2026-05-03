@@ -15,7 +15,8 @@ import androidx.room.PrimaryKey
 )
 data class SpendingEntity(
     @PrimaryKey val id: Long,
-    val amount: Double,
+    /** Хранится как String (BigDecimal.toPlainString()) для точного представления денег. */
+    val amount: String,
     val categoryId: Long,
     val categoryName: String,
     val subCategoryId: Long?,

@@ -25,6 +25,7 @@ import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.UpdateSpendingUseCase
+import java.math.BigDecimal
 
 /** Состояние Bottom-Sheet'а «Добавить/Редактировать расход». */
 data class AddSpendingFormState(
@@ -41,9 +42,11 @@ data class AddSpendingFormState(
 ) {
     /** Можно ли сабмитить форму. */
     val canSubmit: Boolean
-        get() = !isSubmitting && !isInitialLoading &&
-                selectedCategoryId != null &&
-                amountInput.toDoubleOrNull()?.let { it > 0.0 } == true
+        get() {
+            if (isSubmitting || isInitialLoading || selectedCategoryId == null) return false
+            val parsed = amountInput.toBigDecimalOrNull() ?: return false
+            return parsed > BigDecimal.ZERO
+        }
 }
 
 /** Внутреннее состояние редактирования формы (без сетевых списков). */
@@ -248,9 +251,9 @@ class AddSpendingViewModel(
     fun submit(onSuccess: () -> Unit) {
         val s = state.value
         val email = userEmail.value
-        val amount = s.amountInput.toDoubleOrNull()
+        val amount = s.amountInput.toBigDecimalOrNull()
         val cid = s.selectedCategoryId
-        if (email == null || amount == null || amount <= 0.0 || cid == null) {
+        if (email == null || amount == null || amount <= BigDecimal.ZERO || cid == null) {
             edits.update { it.copy(errorMessage = "Заполните сумму и категорию") }
             return
         }

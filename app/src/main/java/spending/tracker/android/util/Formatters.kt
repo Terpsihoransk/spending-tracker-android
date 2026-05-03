@@ -1,6 +1,6 @@
-@file:Suppress("DEPRECATION")
 package spending.tracker.android.util
 
+import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -15,13 +15,16 @@ private val appLocale: Locale = Locale("ru", "RU")
  *
  * Если у суммы нет копеек — показываем без дробной части, чтобы не засорять UI.
  */
-fun formatMoney(amount: Double): String {
+fun formatMoney(amount: BigDecimal): String {
     val format = NumberFormat.getCurrencyInstance(appLocale).apply {
-        maximumFractionDigits = if (amount % 1.0 == 0.0) 0 else 2
-        minimumFractionDigits = if (amount % 1.0 == 0.0) 0 else 2
+        maximumFractionDigits = if (amount.scale() <= 0 || amount.stripTrailingZeros().scale() <= 0) 0 else 2
+        minimumFractionDigits = if (amount.scale() <= 0 || amount.stripTrailingZeros().scale() <= 0) 0 else 2
     }
     return format.format(amount)
 }
+
+/** Перегрузка для Double (для обратной совместимости). */
+fun formatMoney(amount: Double): String = formatMoney(amount.toBigDecimal())
 
 private val dayMonthFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("d MMMM", appLocale)

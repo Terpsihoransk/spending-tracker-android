@@ -17,7 +17,7 @@ import spending.tracker.android.data.local.entity.UserEntity
         SubCategoryEntity::class,
         SpendingEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

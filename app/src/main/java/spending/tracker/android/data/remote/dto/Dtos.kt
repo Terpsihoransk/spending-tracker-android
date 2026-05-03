@@ -52,7 +52,8 @@ data class SubCategoryResponse(
 
 @Serializable
 data class SpendingRequest(
-    val amount: Double,
+    /** На бэке BigDecimal, принимается как строка. */
+    val amount: String,
     val categoryId: Long,
     val subcategoryId: Long? = null,
     val description: String? = null,

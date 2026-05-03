@@ -19,6 +19,7 @@ import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
 import spending.tracker.android.domain.usecase.RefreshCategoriesUseCase
 import spending.tracker.android.domain.usecase.RefreshSpendingsUseCase
+import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -39,11 +40,11 @@ data class DateRange(
 )
 
 data class SummaryUiState(
-    val totalAll: Double = 0.0,
-    val totalThisMonth: Double = 0.0,
-    val totalToday: Double = 0.0,
-    val totalThisWeek: Double = 0.0,
-    val totalThisYear: Double = 0.0,
+    val totalAll: BigDecimal = BigDecimal.ZERO,
+    val totalThisMonth: BigDecimal = BigDecimal.ZERO,
+    val totalToday: BigDecimal = BigDecimal.ZERO,
+    val totalThisWeek: BigDecimal = BigDecimal.ZERO,
+    val totalThisYear: BigDecimal = BigDecimal.ZERO,
     /** Суммы по месяцам для выбранного периода. */
     val byMonth: List<MonthTotal> = emptyList(),
     /** Матрица сумм «Категория × Месяц». */
@@ -68,18 +69,18 @@ data class SummaryUiState(
 
 data class MonthTotal(
     val yearMonth: YearMonth,
-    val total: Double,
+    val total: BigDecimal,
 )
 
 data class CategoryTotal(
     val category: Category,
-    val total: Double,
+    val total: BigDecimal,
 )
 
 data class CategoryMonthBreakdown(
     val category: Category,
     /** Суммы по месяцам в том же порядке, что и `SummaryUiState.byMonth`. */
-    val amounts: List<Double>,
+    val amounts: List<BigDecimal>,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -308,7 +309,7 @@ class SummaryViewModel(
                         .sumOf { it.amount }
                 },
             )
-        }.filter { it.amounts.any { amount -> amount > 0.0 } }
+        }.filter { it.amounts.any { amount -> amount > java.math.BigDecimal.ZERO } }
 
         return SummaryUiState(
             totalAll = totalAll,

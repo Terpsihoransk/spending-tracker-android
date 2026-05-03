@@ -11,6 +11,7 @@ import spending.tracker.android.domain.model.User
 import spending.tracker.android.domain.repository.CategoryRepository
 import spending.tracker.android.domain.repository.SpendingRepository
 import spending.tracker.android.domain.repository.UserRepository
+import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
@@ -41,7 +42,7 @@ class FakeSpendingRepository : SpendingRepository {
 
     override suspend fun addSpending(
         userEmail: String,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
@@ -66,7 +67,7 @@ class FakeSpendingRepository : SpendingRepository {
     override suspend fun updateSpending(
         userEmail: String,
         id: Long,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
