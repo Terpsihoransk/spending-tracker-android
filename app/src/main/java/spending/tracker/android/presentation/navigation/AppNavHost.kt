@@ -18,21 +18,26 @@ import spending.tracker.android.presentation.screen.summary.SummaryScreen
 /**
  * Корневой NavHost. Стартовый экран выбирается на основе наличия email в DataStore:
  *   - если email сохранён → [Destination.Spendings]
- *   - если нет          → [Destination.EmailEntry]
+ *   - если нет → [Destination.EmailEntry]
  */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-    // MVP1: Всегда показываем экран ввода email, даже если пользователь уже входил.
-    // Email сохраняется в SessionManager для подстановки в поле ввода.
     val session: SessionManager = koinInject()
     val currentEmail by session.emailFlow.collectAsState(initial = "")
 
+    // Динамический стартовый экран на основе сохранённой сессии
+    val startDestination = if (currentEmail.isNotEmpty()) {
+        Destination.Spendings.route
+    } else {
+        Destination.EmailEntry.route
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Destination.EmailEntry.route,
+        startDestination = startDestination,
         modifier = modifier,
     ) {
         composable(Destination.EmailEntry.route) {

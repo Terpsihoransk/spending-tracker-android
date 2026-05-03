@@ -11,6 +11,7 @@ import spending.tracker.android.domain.model.User
 import spending.tracker.android.domain.repository.CategoryRepository
 import spending.tracker.android.domain.repository.SpendingRepository
 import spending.tracker.android.domain.repository.UserRepository
+import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
@@ -41,7 +42,7 @@ class FakeSpendingRepository : SpendingRepository {
 
     override suspend fun addSpending(
         userEmail: String,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
@@ -66,10 +67,11 @@ class FakeSpendingRepository : SpendingRepository {
     override suspend fun updateSpending(
         userEmail: String,
         id: Long,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
+        date: LocalDate,
     ): Result<Spending> {
         failUpdateWith?.let { return Result.failure(it) }
         val current = state.value[userEmail].orEmpty()
@@ -80,6 +82,7 @@ class FakeSpendingRepository : SpendingRepository {
             categoryId = categoryId,
             subCategoryId = subCategoryId,
             description = description,
+            date = date,
         )
         state.value += (userEmail to current.map { if (it.id == id) updated else it })
         return Result.success(updated)

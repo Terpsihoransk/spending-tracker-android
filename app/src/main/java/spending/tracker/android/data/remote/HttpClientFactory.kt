@@ -13,13 +13,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import spending.tracker.android.BuildConfig
 
 object HttpClientFactory {
 
-    // adb reverse tcp:8081 tcp:8081 — туннелирует 127.0.0.1:8081 эмулятора → 127.0.0.1:8081 хоста
-//    private const val BASE_URL = "http://127.0.0.1:8081/api/v1/" // локально
-    private const val BASE_URL = "http://192.168.1.99:8081/api/v1/" // ноут
-//    private const val BASE_URL = "http://192.168.1.101:8081/api/v1/" // сервер
+    // URL из config.properties через BuildConfig
+    private const val BASE_URL = BuildConfig.BASE_URL
     private const val TAG = "KtorHttpClient"
 
     fun create(): HttpClient = HttpClient(OkHttp) {
@@ -37,8 +36,7 @@ object HttpClientFactory {
         }
 
         install(Logging) {
-            // Временно ALL для диагностики; после починки вернуть INFO.
-            level = LogLevel.ALL
+            level = if (BuildConfig.HTTP_LOGGING_ENABLED) LogLevel.ALL else LogLevel.NONE
             logger = object : Logger {
                 override fun log(message: String) {
                     Log.d(TAG, message)
@@ -51,9 +49,9 @@ object HttpClientFactory {
             // connect — TCP handshake (быстро падает, если порт недоступен).
             // socket — ожидание данных после установления соединения.
             // request — общий таймаут на весь round-trip.
-            connectTimeoutMillis = 5_000
-            socketTimeoutMillis = 15_000
-            requestTimeoutMillis = 20_000
+            connectTimeoutMillis = BuildConfig.HTTP_TIMEOUT_MS
+            socketTimeoutMillis = BuildConfig.HTTP_TIMEOUT_MS * 3
+            requestTimeoutMillis = BuildConfig.HTTP_TIMEOUT_MS * 5
         }
 
         engine {

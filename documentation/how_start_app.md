@@ -1,8 +1,17 @@
 ## Что сделать перед запуском в эмуляторе
 
-### Шаг 0 - хост бэкенда
+### Шаг 0 - настройка подключения
 
-В `HttpClientFactory` прописать `BASE_URL` хоста с бэкендом
+Скопируйте `config.properties.example` в `config.properties` и укажите URL бэкенда:
+
+```bash
+cp config.properties.example config.properties
+```
+
+Отредактируйте `config.properties`:
+- `BASE_URL` — URL вашего бэкенда
+- `HTTP_TIMEOUT_MS` — таймаут запросов (мс)
+- `HTTP_LOGGING_ENABLED` — включить логирование (`true`/`false`)
 
 ### Шаг 1 — Создай эмулятор (если ещё нет)
 

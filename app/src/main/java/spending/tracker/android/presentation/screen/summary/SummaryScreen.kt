@@ -1,5 +1,7 @@
 package spending.tracker.android.presentation.screen.summary
 
+import java.math.BigDecimal
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -107,7 +109,7 @@ fun SummaryScreen(
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-            if (state.totalAll == 0.0) {
+            if (state.totalAll == BigDecimal.ZERO) {
                 Box(
                     Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -403,8 +405,9 @@ private fun ClickablePieChart(
     strokeWidth: Float = 40f,
     onSliceClick: (spending.tracker.android.domain.model.Category) -> Unit,
 ) {
-    val total = slices.sumOf { it.value }.takeIf { it > 0.0 } ?: 1.0
-    
+    val total = slices.map { it.value }.reduceOrNull { acc, bd -> acc.add(bd) } ?: BigDecimal.ONE
+    val safeTotal = if (total > BigDecimal.ZERO) total else BigDecimal.ONE
+
     Canvas(
         modifier = modifier.clickable(enabled = false) {},
     ) {
@@ -417,7 +420,8 @@ private fun ClickablePieChart(
 
         var startAngle = -90f
         slices.forEach { slice ->
-            val sweep = (slice.value / total * 360.0).toFloat()
+            val sweep = slice.value.divide(safeTotal, 10, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal(360.0)).toFloat()
             drawArc(
                 color = slice.color,
                 startAngle = startAngle,
@@ -438,7 +442,8 @@ private fun PieChartLegend(
     modifier: Modifier = Modifier,
     onSliceClick: (spending.tracker.android.domain.model.Category) -> Unit,
 ) {
-    val total = slices.sumOf { it.value }.takeIf { it > 0.0 } ?: 1.0
+    val total = slices.map { it.value }.reduceOrNull { acc, bd -> acc.add(bd) } ?: BigDecimal.ONE
+    val safeTotal = if (total > BigDecimal.ZERO) total else BigDecimal.ONE
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -454,7 +459,8 @@ private fun PieChartLegend(
                         .background(slice.color, CircleShape),
                 )
                 Spacer(Modifier.padding(horizontal = 4.dp))
-                val pct = (slice.value / total * 100).toInt()
+                val pct = slice.value.divide(safeTotal, 10, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal(100)).toInt()
                 Text(
                     text = "${slice.label} · $pct%",
                     style = MaterialTheme.typography.bodyMedium,

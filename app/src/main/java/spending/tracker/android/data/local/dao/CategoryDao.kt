@@ -27,10 +27,19 @@ interface CategoryDao {
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun deleteCategory(id: Long)
 
+    /**
+     * Удалить категории, которых нет в remote-списке.
+     */
+    @Query("DELETE FROM categories WHERE userEmail = :userEmail AND id NOT IN (:keepIds)")
+    suspend fun deleteMissingCategoriesForUser(userEmail: String, keepIds: List<Long>)
+
+    /**
+     * Умный sync категорий.
+     */
     @Transaction
-    suspend fun replaceCategoriesForUser(userEmail: String, categories: List<CategoryEntity>) {
-        deleteCategoriesForUser(userEmail)
-        upsertCategories(categories)
+    suspend fun syncCategoriesForUser(userEmail: String, remote: List<CategoryEntity>) {
+        deleteMissingCategoriesForUser(userEmail, remote.map { it.id })
+        upsertCategories(remote)
     }
 
     // --- SubCategories ---
@@ -49,9 +58,18 @@ interface CategoryDao {
     @Query("DELETE FROM subcategories WHERE id = :id")
     suspend fun deleteSubCategory(id: Long)
 
+    /**
+     * Удалить подкатегории, которых нет в remote-списке.
+     */
+    @Query("DELETE FROM subcategories WHERE categoryId = :categoryId AND id NOT IN (:keepIds)")
+    suspend fun deleteMissingSubCategoriesForCategory(categoryId: Long, keepIds: List<Long>)
+
+    /**
+     * Умный sync подкатегорий.
+     */
     @Transaction
-    suspend fun replaceSubCategoriesForCategory(categoryId: Long, subCategories: List<SubCategoryEntity>) {
-        deleteSubCategoriesForCategory(categoryId)
-        upsertSubCategories(subCategories)
+    suspend fun syncSubCategoriesForCategory(categoryId: Long, remote: List<SubCategoryEntity>) {
+        deleteMissingSubCategoriesForCategory(categoryId, remote.map { it.id })
+        upsertSubCategories(remote)
     }
 }
