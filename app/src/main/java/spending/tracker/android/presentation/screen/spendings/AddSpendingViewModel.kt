@@ -26,7 +26,10 @@ import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.RefreshSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.UpdateSpendingUseCase
+import spending.tracker.android.util.formatDateDmYyyy
+import spending.tracker.android.util.parseDateDmYyyy
 import java.math.BigDecimal
+import java.time.LocalDate
 
 /** Состояние Bottom-Sheet'а «Добавить/Редактировать расход». */
 data class AddSpendingFormState(
@@ -40,6 +43,10 @@ data class AddSpendingFormState(
     val isInitialLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
+    /** Дата в формате dd.MM.yyyy для отображения в TextField. */
+    val dateInput: String = "",
+    /** Дата редактируемого расхода (для передачи в API). */
+    val editingDate: LocalDate? = null,
 ) {
     /** Можно ли сабмитить форму. */
     val canSubmit: Boolean
@@ -60,6 +67,10 @@ private data class FormEdits(
     val isInitialLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
+    /** Дата в формате dd.MM.yyyy для отображения в TextField. */
+    val dateInput: String = "",
+    /** Дата редактируемого расхода (для передачи в API). */
+    val editingDate: LocalDate? = null,
 )
 
 /**
@@ -118,6 +129,8 @@ class AddSpendingViewModel(
             isInitialLoading = e.isInitialLoading,
             isSubmitting = e.isSubmitting,
             errorMessage = e.errorMessage,
+            dateInput = e.dateInput,
+            editingDate = e.editingDate,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -156,6 +169,8 @@ class AddSpendingViewModel(
                             selectedSubCategoryId = spending.subCategoryId,
                             description = spending.description.orEmpty(),
                             isInitialLoading = false,
+                            dateInput = formatDateDmYyyy(spending.date),
+                            editingDate = spending.date,
                         )
                     }
                 },
@@ -191,6 +206,19 @@ class AddSpendingViewModel(
 
     fun onDescriptionChange(value: String) {
         edits.update { it.copy(description = value) }
+    }
+
+    /**
+     * Обработчик изменения даты.
+     * Парсит дату из формата dd.MM.yyyy и сохраняет в editingDate.
+     */
+    fun onDateChange(value: String) {
+        val parsed = try {
+            parseDateDmYyyy(value)
+        } catch (e: Exception) {
+            null
+        }
+        edits.update { it.copy(dateInput = value, editingDate = parsed) }
     }
 
     /** Добавить новую категорию и выбрать её. */
@@ -267,6 +295,14 @@ class AddSpendingViewModel(
         edits.update { it.copy(isSubmitting = true, errorMessage = null) }
         viewModelScope.launch {
             val result = if (spendingId != null) {
+                // Если dateInput изменён — парсим его, иначе используем editingDate или текущую дату
+                val date = edits.value.dateInput.takeIf { it.isNotBlank() }?.let {
+                    try {
+                        parseDateDmYyyy(it)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: edits.value.editingDate ?: LocalDate.now()
                 updateSpending(
                     userEmail = email,
                     id = spendingId,
@@ -274,6 +310,7 @@ class AddSpendingViewModel(
                     categoryId = cid,
                     subCategoryId = s.selectedSubCategoryId,
                     description = s.description.ifBlank { null },
+                    date = date,
                 )
             } else {
                 addSpending(

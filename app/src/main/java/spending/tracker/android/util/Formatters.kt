@@ -57,3 +57,19 @@ fun formatMonthShort(yearMonth: java.time.YearMonth): String {
     return yearMonth.month.getDisplayName(TextStyle.SHORT_STANDALONE, appLocale)
         .replaceFirstChar { it.uppercase(appLocale) }
 }
+
+/** Формат dd.MM.yyyy для отображения в UI: «15.03.2025». */
+private val dayMonthYearFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd.MM.yyyy", appLocale)
+
+/** Дата в формате dd.MM.yyyy. */
+fun formatDateDmYyyy(date: LocalDate): String = date.format(dayMonthYearFormatter)
+
+/** Парсинг даты из формата dd.MM.yyyy. */
+fun parseDateDmYyyy(input: String): LocalDate? {
+    return try {
+        LocalDate.parse(input, dayMonthYearFormatter)
+    } catch (_: Exception) {
+        null
+    }
+}

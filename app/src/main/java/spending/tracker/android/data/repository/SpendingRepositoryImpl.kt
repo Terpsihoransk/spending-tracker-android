@@ -13,6 +13,7 @@ import spending.tracker.android.util.toEntity
 import spending.tracker.android.util.toIsoString
 import spending.tracker.android.util.toLocalDate
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class SpendingRepositoryImpl(
     private val dao: SpendingDao,
@@ -61,12 +62,14 @@ class SpendingRepositoryImpl(
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
+        date: LocalDate,
     ): Result<Spending> = runCatching {
         val request = SpendingRequest(
             amount = amount.toPlainString(),
             categoryId = categoryId,
             subcategoryId = subCategoryId,
             description = description,
+            date = date,
         )
         val remote = api.updateSpending(userEmail, id, request)
         dao.upsertSpending(remote.toEntity(synced = true))

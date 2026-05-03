@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import spending.tracker.android.domain.model.Spending
 import spending.tracker.android.domain.repository.SpendingRepository
 import java.math.BigDecimal
+import java.time.LocalDate
 
 /** Подписка на список расходов пользователя (из локального кэша). */
 class ObserveSpendingsUseCase(private val repository: SpendingRepository) {
@@ -43,7 +44,8 @@ class UpdateSpendingUseCase(private val repository: SpendingRepository) {
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
-    ): Result<Spending> = repository.updateSpending(userEmail, id, amount, categoryId, subCategoryId, description)
+        date: LocalDate,
+    ): Result<Spending> = repository.updateSpending(userEmail, id, amount, categoryId, subCategoryId, description, date)
 }
 
 /** Удалить расход. */

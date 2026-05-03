@@ -71,6 +71,7 @@ class FakeSpendingRepository : SpendingRepository {
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
+        date: LocalDate,
     ): Result<Spending> {
         failUpdateWith?.let { return Result.failure(it) }
         val current = state.value[userEmail].orEmpty()
@@ -81,6 +82,7 @@ class FakeSpendingRepository : SpendingRepository {
             categoryId = categoryId,
             subCategoryId = subCategoryId,
             description = description,
+            date = date,
         )
         state.value += (userEmail to current.map { if (it.id == id) updated else it })
         return Result.success(updated)

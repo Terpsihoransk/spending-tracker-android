@@ -95,6 +95,7 @@ class SpendingUseCasesTest {
     @Test
     fun `UpdateSpendingUseCase changes amount and category`() = runTest {
         val created = add(email, BigDecimal("100.0"), categoryId = 1, subCategoryId = null, description = null).getOrThrow()
+        val newDate = LocalDate.of(2025, 3, 10)
 
         val updated = update(
             userEmail = email,
@@ -103,16 +104,18 @@ class SpendingUseCasesTest {
             categoryId = 2,
             subCategoryId = null,
             description = "updated",
+            date = newDate,
         ).getOrThrow()
 
         assertEquals(BigDecimal("500.0"), updated.amount)
         assertEquals(2L, updated.categoryId)
         assertEquals("updated", updated.description)
+        assertEquals(newDate, updated.date)
     }
 
     @Test
     fun `UpdateSpendingUseCase fails for missing id`() = runTest {
-        val result = update(email, id = 999, amount = BigDecimal.ONE, categoryId = 1, subCategoryId = null, description = null)
+        val result = update(email, id = 999, amount = BigDecimal.ONE, categoryId = 1, subCategoryId = null, description = null, date = LocalDate.now())
         assertTrue(result.isFailure)
     }
 

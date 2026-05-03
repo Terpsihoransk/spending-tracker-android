@@ -1,5 +1,6 @@
 package spending.tracker.android.presentation.screen.spendings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -27,6 +32,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +51,9 @@ import org.koin.core.parameter.parametersOf
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import spending.tracker.android.domain.model.Category
 import spending.tracker.android.domain.model.SubCategory
+import spending.tracker.android.util.formatDateDmYyyy
+import spending.tracker.android.util.parseDateDmYyyy
+import java.time.LocalDate
 
 private const val MAX_DESCRIPTION_LENGTH = 40
 
@@ -104,7 +113,7 @@ fun AddSpendingSheet(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
                 CategoryDropdown(
                     categories = state.categories,
@@ -112,7 +121,7 @@ fun AddSpendingSheet(
                     onSelect = viewModel::onCategoryChange,
                     onAddNew = viewModel::addCategory,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
                 SubCategoryDropdown(
                     subCategories = state.subCategories,
@@ -121,7 +130,16 @@ fun AddSpendingSheet(
                     onAddNew = viewModel::addSubCategory,
                     enabled = state.selectedCategoryId != null,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
+
+                // Поле даты с DatePicker
+                state.editingDate?.let {
+                    DatePickerField(
+                        value = state.dateInput,
+                        onValueChange = viewModel::onDateChange,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
 
                 OutlinedTextField(
                     value = state.description,
@@ -433,4 +451,62 @@ private fun ExposedDropdownMenuBoxScope.DropdownMenuContent(
         onDismissRequest = onDismiss,
         content = content,
     )
+}
+
+/**
+ * Поле даты с DatePickerDialog.
+ * При клике на поле открывается календарь для выбора даты.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text("Дата") },
+        placeholder = { Text("дд.мм.гггг") },
+        readOnly = true,
+        singleLine = true,
+        trailingIcon = {
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = "Выбрать дату",
+                modifier = Modifier.clickable { showDatePicker = true },
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { showDatePicker = true },
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val selectedDate = LocalDate.ofEpochDay(millis / (24 * 60 * 60 * 1000))
+                            onValueChange(formatDateDmYyyy(selectedDate))
+                        }
+                        showDatePicker = false
+                    },
+                ) {
+                    Text("ОК")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Отмена")
+                }
+            },
+            content = { DatePicker(state = datePickerState) },
+        )
+    }
 }

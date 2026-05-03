@@ -57,6 +57,9 @@ data class SpendingRequest(
     val categoryId: Long,
     val subcategoryId: Long? = null,
     val description: String? = null,
+    /** Дата расхода. Проставляется явно при редактировании, чтобы не сбрасываться на сегодняшнюю. */
+    @Serializable(with = LocalDateSerializer::class)
+    val date: LocalDate? = null,
 )
 
 @Serializable
