@@ -21,6 +21,7 @@ import spending.tracker.android.domain.usecase.ObserveSpendingsUseCase
 import spending.tracker.android.domain.usecase.RefreshCategoriesUseCase
 import spending.tracker.android.domain.usecase.RefreshSpendingsUseCase
 import spending.tracker.android.presentation.components.PeriodFilter
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 /** Диапазон дат для custom периода. */
@@ -37,26 +38,32 @@ data class SpendingsUiState(
     val categories: Map<Long, Category> = emptyMap(),
     val period: PeriodFilter = PeriodFilter.Today,
     val customDateRange: DateRange? = null,
+    val selectedCategoryId: Long? = null,
     val errorMessage: String? = null,
 ) {
-    /** Отфильтрованный по [period] список. */
+    /** Отфильтрованный по [period] и [selectedCategoryId] список. */
     val filteredSpendings: List<Spending>
         get() {
             val today = LocalDate.now()
             return spendings.filter { spending ->
-                when (period) {
+                val matchesPeriod = when (period) {
                     PeriodFilter.Today -> spending.date == today
-                    PeriodFilter.Week -> spending.date >= today.minusDays(6)
+                    PeriodFilter.Week -> spending.date >= today.with(DayOfWeek.MONDAY)
                     PeriodFilter.Month -> spending.date.year == today.year &&
-                            spending.date.month == today.month
-
-                    PeriodFilter.Year -> spending.date.year == today.year
+                            spending.date.month == today.month &&
+                            spending.date.dayOfMonth <= today.dayOfMonth
+                    PeriodFilter.Year -> spending.date.year == today.year &&
+                            (spending.date.monthValue < today.monthValue ||
+                                    (spending.date.monthValue == today.monthValue &&
+                                            spending.date.dayOfMonth <= today.dayOfMonth))
                     PeriodFilter.Custom -> {
                         customDateRange?.let { range ->
                             spending.date >= range.startDate && spending.date <= range.endDate
                         } ?: true
                     }
                 }
+                val matchesCategory = selectedCategoryId == null || spending.categoryId == selectedCategoryId
+                matchesPeriod && matchesCategory
             }
         }
 
@@ -77,6 +84,7 @@ class SpendingsViewModel(
 
     private val period = MutableStateFlow(PeriodFilter.Today)
     private val customDateRange = MutableStateFlow<DateRange?>(null)
+    private val selectedCategoryId = MutableStateFlow<Long?>(null)
     private val error = MutableStateFlow<String?>(null)
     private val isRefreshing = MutableStateFlow(false)
 
@@ -98,16 +106,19 @@ class SpendingsViewModel(
         categoriesFlow,
         period,
         customDateRange,
+        selectedCategoryId,
         error,
         isRefreshing,
     ) { array: Array<*> ->
-        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST", "USELESS_CAST")
         val spendings = array[0] as List<Spending>
+        @Suppress("UNCHECKED_CAST", "USELESS_CAST")
         val categories = array[1] as List<Category>
         val p = array[2] as PeriodFilter
         val range = array[3] as DateRange?
-        val err = array[4] as String?
-        val refreshing = array[5] as Boolean
+        val catId = array[4] as Long?
+        val err = array[5] as String?
+        val refreshing = array[6] as Boolean
         SpendingsUiState(
             isLoading = false,
             isRefreshing = refreshing,
@@ -115,6 +126,7 @@ class SpendingsViewModel(
             categories = categories.associateBy { it.id },
             period = p,
             customDateRange = range,
+            selectedCategoryId = catId,
             errorMessage = err,
         )
     }.stateIn(
@@ -141,6 +153,10 @@ class SpendingsViewModel(
             val today = LocalDate.now()
             customDateRange.value = DateRange(today, today)
         }
+    }
+
+    fun onCategorySelected(categoryId: Long?) {
+        selectedCategoryId.value = categoryId
     }
 
     fun onCustomDateRangeChanged(startDate: LocalDate, endDate: LocalDate) {
