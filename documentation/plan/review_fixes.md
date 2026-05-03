@@ -20,7 +20,7 @@
   2. `Double` для денежных сумм = ошибки округления (`0.1 + 0.2 != 0.3`).
 - **Фикс:** перейти на `BigDecimal` в domain + DTO остаётся `String`, в Entity — `String` (`amount.toPlainString()`). При ошибке парсинга — бросать исключение, чтобы `runCatching` в репозитории поймал.
 
-### P0-3. Моргание UI при refresh (DELETE + INSERT)
+### ~~P0-3. Моргание UI при refresh (DELETE + INSERT)~~
 - **Файл:** [`SpendingDao.replaceAllForUser`](../app/src/main/java/spending/tracker/android/data/local/dao/SpendingDao.kt:33), [`CategoryDao.replaceCategoriesForUser`](../app/src/main/java/spending/tracker/android/data/local/dao/CategoryDao.kt:31)
 - **Проблема:** внутри `@Transaction` Flow может эмитить промежуточное пустое состояние — UI моргает пустым списком на каждом refresh. `@Transaction` на **suspend-функциях** с несколькими отдельными запросами НЕ гарантирует отсутствие промежуточных эмиссий в observe-Flow.
 - **Фикс:** заменить на «умный sync»:
@@ -35,7 +35,7 @@
   }
   ```
 
-### P0-4. Подкатегории не подгружаются для `AddSpendingSheet`
+### ~~P0-4. Подкатегории не подгружаются для `AddSpendingSheet`~~
 - **Файл:** [`CategoriesViewModel.toggle`](../app/src/main/java/spending/tracker/android/presentation/screen/categories/CategoriesViewModel.kt:96), [`AddSpendingViewModel`](../app/src/main/java/spending/tracker/android/presentation/screen/spendings/AddSpendingViewModel.kt:1)
 - **Проблема:** `refreshSubCategories` дёргается **только** при раскрытии карточки на экране «Категории». В `AddSpendingSheet` при выборе категории показывается пустой список — пока юзер не откроет «Категории» и не раскроет каждую.
 - **Фикс:** в `AddSpendingViewModel.onCategoryChange` автоматически вызывать `refreshSubCategories(email, categoryId)`. Либо при `refreshCategories` делать bulk-refresh всех субкатегорий.

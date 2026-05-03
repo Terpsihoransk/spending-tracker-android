@@ -24,6 +24,7 @@ import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
+import spending.tracker.android.domain.usecase.RefreshSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.UpdateSpendingUseCase
 import java.math.BigDecimal
 
@@ -74,6 +75,7 @@ class AddSpendingViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val observeCategories: ObserveCategoriesUseCase,
     private val observeSubCategories: ObserveSubCategoriesUseCase,
+    private val refreshSubCategories: RefreshSubCategoriesUseCase,
     private val addSpending: AddSpendingUseCase,
     private val updateSpending: UpdateSpendingUseCase,
     private val getSpendingById: GetSpendingByIdUseCase,
@@ -176,6 +178,11 @@ class AddSpendingViewModel(
 
     fun onCategoryChange(id: Long) {
         edits.update { it.copy(selectedCategoryId = id, selectedSubCategoryId = null) }
+        // Подгружаем подкатегории с сервера при смене категории
+        val email = userEmail.value ?: return
+        viewModelScope.launch {
+            refreshSubCategories(email, id)
+        }
     }
 
     fun onSubCategoryChange(id: Long?) {
@@ -299,10 +306,4 @@ class AddSpendingViewModel(
 
 private fun <T> MutableStateFlow<T>.update(block: (T) -> T) {
     value = block(value)
-}
-
-private fun Double.toPlainString(): String {
-    // Убираем ".0" у круглых чисел, но оставляем нормальную форму.
-    val asLong = this.toLong()
-    return if (asLong.toDouble() == this) asLong.toString() else this.toString()
 }
