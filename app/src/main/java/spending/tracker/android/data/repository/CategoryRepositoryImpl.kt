@@ -27,7 +27,7 @@ class CategoryRepositoryImpl(
 
     override suspend fun refreshCategories(userEmail: String): Result<Unit> = runCatching {
         val remote = categoryApi.getCategories(userEmail)
-        dao.replaceCategoriesForUser(userEmail, remote.map { it.toEntity() })
+        dao.syncCategoriesForUser(userEmail, remote.map { it.toEntity() })
     }.onFailure { Log.w(TAG, "refreshCategories(userEmail=$userEmail) failed", it) }
 
     override suspend fun addCategory(userEmail: String, name: String): Result<Category> = runCatching {
@@ -54,7 +54,7 @@ class CategoryRepositoryImpl(
 
     override suspend fun refreshSubCategories(userEmail: String, categoryId: Long): Result<Unit> = runCatching {
         val remote = subCategoryApi.getSubCategories(userEmail, categoryId)
-        dao.replaceSubCategoriesForCategory(categoryId, remote.map { it.toEntity() })
+        dao.syncSubCategoriesForCategory(categoryId, remote.map { it.toEntity() })
     }.onFailure { Log.w(TAG, "refreshSubCategories(categoryId=$categoryId) failed", it) }
 
     override suspend fun addSubCategory(

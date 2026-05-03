@@ -27,7 +27,7 @@ class SpendingRepositoryImpl(
     override suspend fun refreshSpendings(userEmail: String): Result<Unit> = runCatching {
         val remote = api.getSpendings(userEmail)
         val entities = remote.map { it.toEntity(synced = true) }
-        dao.upsertSpendings(entities)
+        dao.syncForUser(userEmail, entities)
     }.onFailure { Log.w(TAG, "refreshSpendings failed", it) }
 
     override suspend fun getSpendingById(userEmail: String, id: Long): Result<Spending> = runCatching {

@@ -13,7 +13,7 @@
 - **Фикс:** расширить `clearUser()` (или ввести `LogoutUseCase`), чтобы вычищать **все таблицы** (или сразу делать `db.clearAllTables()`). Также чистить DataStore атомарно.
 - **Решение:** При logout необходимо очищать все таблицы одним способом - appDatabase.clearAllTables()
 
-### P0-2. `amount: Double` для денег
+### ~~P0-2. `amount: Double` для денег~~
 - **Файл:** [`Mappers.kt:38`](../app/src/main/java/spending/tracker/android/util/Mappers.kt:38), [`Spending.kt`](../app/src/main/java/spending/tracker/android/domain/model/Spending.kt:7), [`SpendingEntity.kt`](../app/src/main/java/spending/tracker/android/data/local/entity/SpendingEntity.kt:18)
 - **Проблема:**
   1. `amount.toDoubleOrNull() ?: 0.0` — при невалидной строке с бэка пользователь увидит `0` вместо ошибки.
@@ -35,12 +35,7 @@
   }
   ```
 
-### P0-4. `BASE_URL` захардкожен на `10.0.2.2:8081`
-- **Файл:** [`HttpClientFactory.kt:20`](../app/src/main/java/spending/tracker/android/data/remote/HttpClientFactory.kt:20)
-- **Проблема:** работает только на эмуляторе. Любой release-build или реальное устройство упадут.
-- **Фикс:** вынести в `BuildConfig` через `buildConfigField` в [`app/build.gradle.kts`](../../app/build.gradle.kts) с разными значениями для `debug` / `release`. Включить `buildFeatures.buildConfig = true`.
-
-### P0-5. Подкатегории не подгружаются для `AddSpendingSheet`
+### P0-4. Подкатегории не подгружаются для `AddSpendingSheet`
 - **Файл:** [`CategoriesViewModel.toggle`](../app/src/main/java/spending/tracker/android/presentation/screen/categories/CategoriesViewModel.kt:96), [`AddSpendingViewModel`](../app/src/main/java/spending/tracker/android/presentation/screen/spendings/AddSpendingViewModel.kt:1)
 - **Проблема:** `refreshSubCategories` дёргается **только** при раскрытии карточки на экране «Категории». В `AddSpendingSheet` при выборе категории показывается пустой список — пока юзер не откроет «Категории» и не раскроет каждую.
 - **Фикс:** в `AddSpendingViewModel.onCategoryChange` автоматически вызывать `refreshSubCategories(email, categoryId)`. Либо при `refreshCategories` делать bulk-refresh всех субкатегорий.

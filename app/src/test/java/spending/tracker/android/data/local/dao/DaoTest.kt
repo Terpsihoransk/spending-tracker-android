@@ -27,8 +27,8 @@ import spending.tracker.android.data.local.entity.UserEntity
  *
  * Покрывают:
  *  - `UserDao`: upsert / replaceCurrentUser / clearUsers / observeCurrentUser
- *  - `CategoryDao`: CRUD, replace, FK-согласованность для SubCategory
- *  - `SpendingDao`: CRUD, replaceAllForUser, сортировка
+ *  - `CategoryDao`: CRUD, sync, FK-согласованность для SubCategory
+ *  - `SpendingDao`: CRUD, syncForUser, сортировка
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(
@@ -106,10 +106,10 @@ class DaoTest {
     }
 
     @Test
-    fun categoryDao_replaceCategoriesForUser_clearsOldAndInsertsNew() = runTest {
+    fun categoryDao_syncCategoriesForUser_clearsOldAndInsertsNew() = runTest {
         val email = "u@x.y"
         categoryDao.upsertCategory(CategoryEntity(1, "Old", email))
-        categoryDao.replaceCategoriesForUser(
+        categoryDao.syncCategoriesForUser(
             email,
             listOf(
                 CategoryEntity(10, "Fresh-1", email),
@@ -177,7 +177,7 @@ class DaoTest {
     }
 
     @Test
-    fun spendingDao_replaceAllForUser_removesOldSpendings() = runTest {
+    fun spendingDao_syncForUser_removesOldSpendings() = runTest {
         val email = "u@x.y"
         spendingDao.upsertSpending(
             SpendingEntity(
@@ -186,7 +186,7 @@ class DaoTest {
                 date = "2025-01-01", description = null, userEmail = email, synced = true,
             ),
         )
-        spendingDao.replaceAllForUser(
+        spendingDao.syncForUser(
             email,
             listOf(
                 SpendingEntity(

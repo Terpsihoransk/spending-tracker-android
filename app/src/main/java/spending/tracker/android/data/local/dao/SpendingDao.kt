@@ -26,12 +26,20 @@ interface SpendingDao {
     suspend fun deleteAllForUser(userEmail: String)
 
     /**
-     * Атомарно заменить весь список расходов пользователя на новый
-     * (используется при refresh: сначала чистим локальный кэш, затем вставляем свежее).
+     * Удалить записи, которых нет в remote-списке.
+     * Это позволяет избежать промежуточного пустого состояния в Flow
+     * при sync (delete -> insert вместо delete all -> insert all).
+     */
+    @Query("DELETE FROM spendings WHERE userEmail = :userEmail AND id NOT IN (:keepIds)")
+    suspend fun deleteMissingForUser(userEmail: String, keepIds: List<Long>)
+
+    /**
+     * Умный sync: удаляем только отсутствующие в remote, затем upsert'им всё.
+     * Не вызывает промежуточного пустого эмита в observe-Flow.
      */
     @Transaction
-    suspend fun replaceAllForUser(userEmail: String, spendings: List<SpendingEntity>) {
-        deleteAllForUser(userEmail)
-        upsertSpendings(spendings)
+    suspend fun syncForUser(userEmail: String, remote: List<SpendingEntity>) {
+        deleteMissingForUser(userEmail, remote.map { it.id })
+        upsertSpendings(remote)
     }
 }
