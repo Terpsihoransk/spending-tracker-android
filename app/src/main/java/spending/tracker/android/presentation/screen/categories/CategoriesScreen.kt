@@ -253,7 +253,7 @@ private fun NameDialog(
                 onValueChange = { value = it },
                 singleLine = true,
                 label = { Text("Название") },
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier.fillMaxWidth(),
             )
         },

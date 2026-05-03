@@ -275,7 +275,7 @@ private fun CategoryDropdown(
                     onValueChange = { newCategoryName = it },
                     label = { Text("Название") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
@@ -390,7 +390,7 @@ private fun SubCategoryDropdown(
                     onValueChange = { newSubCategoryName = it },
                     label = { Text("Название") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
