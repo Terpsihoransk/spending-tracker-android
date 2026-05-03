@@ -18,7 +18,8 @@ object HttpClientFactory {
 
     // adb reverse tcp:8081 tcp:8081 — туннелирует 127.0.0.1:8081 эмулятора → 127.0.0.1:8081 хоста
 //    private const val BASE_URL = "http://127.0.0.1:8081/api/v1/" // локально
-    private const val BASE_URL = "http://192.168.1.99:8081/api/v1/" // ноут
+//    private const val BASE_URL = "http://192.168.1.99:5222/api/v1/" // ноут
+    private const val BASE_URL = "http://37.194.84.64:5222/api/v1/" // ноут внешка
 //    private const val BASE_URL = "http://192.168.1.101:8081/api/v1/" // сервер
     private const val TAG = "KtorHttpClient"
 
