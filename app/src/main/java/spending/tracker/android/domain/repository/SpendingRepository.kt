@@ -2,6 +2,8 @@ package spending.tracker.android.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import spending.tracker.android.domain.model.Spending
+import java.math.BigDecimal
+import java.time.LocalDate
 
 /**
  * Offline-first репозиторий расходов.
@@ -28,7 +30,7 @@ interface SpendingRepository {
      */
     suspend fun addSpending(
         userEmail: String,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
@@ -38,10 +40,11 @@ interface SpendingRepository {
     suspend fun updateSpending(
         userEmail: String,
         id: Long,
-        amount: Double,
+        amount: BigDecimal,
         categoryId: Long,
         subCategoryId: Long?,
         description: String?,
+        date: LocalDate,
     ): Result<Spending>
 
     /** Удалить расход по id (сеть + локальный кэш). */

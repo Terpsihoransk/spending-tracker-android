@@ -2,7 +2,7 @@
 
 **Version**: v0.0.1  
 **Base URL**: `http://localhost:8081/api/v1`  
-**Swagger UI**: `http://localhost:8081/swagger-ui/index.html`  
+**Swagger UI**: `http://localhost:8081/swagger-ui/index.html`
 
 ---
 
@@ -32,7 +32,8 @@ Email валидируется через `ValidEmailHeader` аннотацие�
 **Request Body** — [`UserRequest`](../backend/src/main/java/spending/tracker/backend/dto/UserRequest.java):
 ```json
 {
-  "email": "user@example.com"
+  "email": "user@example.com",
+  "googleSheetsId": "sheet123"
 }
 ```
 
@@ -409,9 +410,12 @@ Email валидируется через `ValidEmailHeader` аннотацие�
   "amount": 200.00,
   "categoryId": 1,
   "subcategoryId": 2,
+  "date": "2024-01-15",
   "description": "Updated description"
 }
 ```
+
+> **Note**: Поле `date` является опциональным. Если передано — дата будет обновлена, иначе останется прежней.
 
 **Response** — [`SpendingResponse`](../backend/src/main/java/spending/tracker/backend/dto/SpendingResponse.java) (200 OK):
 ```json

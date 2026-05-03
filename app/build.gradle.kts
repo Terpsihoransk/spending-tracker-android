@@ -1,9 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.gms.google.services)
+}
+
+val configFile = rootProject.file("config.properties")
+val configProperties = Properties()
+if (configFile.exists()) {
+    configProperties.load(configFile.inputStream())
 }
 
 android {
@@ -17,6 +25,10 @@ android {
         versionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toInt() ?: 1
         versionName = project.findProperty("APP_VERSION_NAME") as? String ?: "0.0.1"
 
+        // Конфигурация из config.properties
+        buildConfigField("String", "BASE_URL", "\"${configProperties.getProperty("BASE_URL", "http://10.0.2.2:8081/api/v1/")}\"")
+        buildConfigField("Long", "HTTP_TIMEOUT_MS", configProperties.getProperty("HTTP_TIMEOUT_MS", "30000") + "L")
+        buildConfigField("Boolean", "HTTP_LOGGING_ENABLED", configProperties.getProperty("HTTP_LOGGING_ENABLED", "false"))
     }
 
     buildTypes {
@@ -34,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

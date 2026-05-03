@@ -24,7 +24,12 @@ import spending.tracker.android.domain.usecase.GetSpendingByIdUseCase
 import spending.tracker.android.domain.usecase.ObserveCategoriesUseCase
 import spending.tracker.android.domain.usecase.ObserveCurrentUserUseCase
 import spending.tracker.android.domain.usecase.ObserveSubCategoriesUseCase
+import spending.tracker.android.domain.usecase.RefreshSubCategoriesUseCase
 import spending.tracker.android.domain.usecase.UpdateSpendingUseCase
+import spending.tracker.android.util.formatDateDmYyyy
+import spending.tracker.android.util.parseDateDmYyyy
+import java.math.BigDecimal
+import java.time.LocalDate
 
 /** Состояние Bottom-Sheet'а «Добавить/Редактировать расход». */
 data class AddSpendingFormState(
@@ -38,12 +43,18 @@ data class AddSpendingFormState(
     val isInitialLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
+    /** Дата в формате dd.MM.yyyy для отображения в TextField. */
+    val dateInput: String = "",
+    /** Дата редактируемого расхода (для передачи в API). */
+    val editingDate: LocalDate? = null,
 ) {
     /** Можно ли сабмитить форму. */
     val canSubmit: Boolean
-        get() = !isSubmitting && !isInitialLoading &&
-                selectedCategoryId != null &&
-                amountInput.toDoubleOrNull()?.let { it > 0.0 } == true
+        get() {
+            if (isSubmitting || isInitialLoading || selectedCategoryId == null) return false
+            val parsed = amountInput.toBigDecimalOrNull() ?: return false
+            return parsed > BigDecimal.ZERO
+        }
 }
 
 /** Внутреннее состояние редактирования формы (без сетевых списков). */
@@ -56,6 +67,10 @@ private data class FormEdits(
     val isInitialLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
+    /** Дата в формате dd.MM.yyyy для отображения в TextField. */
+    val dateInput: String = "",
+    /** Дата редактируемого расхода (для передачи в API). */
+    val editingDate: LocalDate? = null,
 )
 
 /**
@@ -71,6 +86,7 @@ class AddSpendingViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val observeCategories: ObserveCategoriesUseCase,
     private val observeSubCategories: ObserveSubCategoriesUseCase,
+    private val refreshSubCategories: RefreshSubCategoriesUseCase,
     private val addSpending: AddSpendingUseCase,
     private val updateSpending: UpdateSpendingUseCase,
     private val getSpendingById: GetSpendingByIdUseCase,
@@ -113,6 +129,8 @@ class AddSpendingViewModel(
             isInitialLoading = e.isInitialLoading,
             isSubmitting = e.isSubmitting,
             errorMessage = e.errorMessage,
+            dateInput = e.dateInput,
+            editingDate = e.editingDate,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -151,6 +169,8 @@ class AddSpendingViewModel(
                             selectedSubCategoryId = spending.subCategoryId,
                             description = spending.description.orEmpty(),
                             isInitialLoading = false,
+                            dateInput = formatDateDmYyyy(spending.date),
+                            editingDate = spending.date,
                         )
                     }
                 },
@@ -173,6 +193,11 @@ class AddSpendingViewModel(
 
     fun onCategoryChange(id: Long) {
         edits.update { it.copy(selectedCategoryId = id, selectedSubCategoryId = null) }
+        // Подгружаем подкатегории с сервера при смене категории
+        val email = userEmail.value ?: return
+        viewModelScope.launch {
+            refreshSubCategories(email, id)
+        }
     }
 
     fun onSubCategoryChange(id: Long?) {
@@ -181,6 +206,19 @@ class AddSpendingViewModel(
 
     fun onDescriptionChange(value: String) {
         edits.update { it.copy(description = value) }
+    }
+
+    /**
+     * Обработчик изменения даты.
+     * Парсит дату из формата dd.MM.yyyy и сохраняет в editingDate.
+     */
+    fun onDateChange(value: String) {
+        val parsed = try {
+            parseDateDmYyyy(value)
+        } catch (e: Exception) {
+            null
+        }
+        edits.update { it.copy(dateInput = value, editingDate = parsed) }
     }
 
     /** Добавить новую категорию и выбрать её. */
@@ -248,15 +286,23 @@ class AddSpendingViewModel(
     fun submit(onSuccess: () -> Unit) {
         val s = state.value
         val email = userEmail.value
-        val amount = s.amountInput.toDoubleOrNull()
+        val amount = s.amountInput.toBigDecimalOrNull()
         val cid = s.selectedCategoryId
-        if (email == null || amount == null || amount <= 0.0 || cid == null) {
+        if (email == null || amount == null || amount <= BigDecimal.ZERO || cid == null) {
             edits.update { it.copy(errorMessage = "Заполните сумму и категорию") }
             return
         }
         edits.update { it.copy(isSubmitting = true, errorMessage = null) }
         viewModelScope.launch {
             val result = if (spendingId != null) {
+                // Если dateInput изменён — парсим его, иначе используем editingDate или текущую дату
+                val date = edits.value.dateInput.takeIf { it.isNotBlank() }?.let {
+                    try {
+                        parseDateDmYyyy(it)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: edits.value.editingDate ?: LocalDate.now()
                 updateSpending(
                     userEmail = email,
                     id = spendingId,
@@ -264,6 +310,7 @@ class AddSpendingViewModel(
                     categoryId = cid,
                     subCategoryId = s.selectedSubCategoryId,
                     description = s.description.ifBlank { null },
+                    date = date,
                 )
             } else {
                 addSpending(
@@ -296,10 +343,4 @@ class AddSpendingViewModel(
 
 private fun <T> MutableStateFlow<T>.update(block: (T) -> T) {
     value = block(value)
-}
-
-private fun Double.toPlainString(): String {
-    // Убираем ".0" у круглых чисел, но оставляем нормальную форму.
-    val asLong = this.toLong()
-    return if (asLong.toDouble() == this) asLong.toString() else this.toString()
 }

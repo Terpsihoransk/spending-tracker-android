@@ -113,6 +113,7 @@ val appModule = module {
             observeCurrentUser = get(),
             observeCategories = get(),
             observeSubCategories = get(),
+            refreshSubCategories = get(),
             addSpending = get(),
             updateSpending = get(),
             getSpendingById = get(),

@@ -1,6 +1,6 @@
-@file:Suppress("DEPRECATION")
 package spending.tracker.android.util
 
+import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -15,13 +15,16 @@ private val appLocale: Locale = Locale("ru", "RU")
  *
  * Если у суммы нет копеек — показываем без дробной части, чтобы не засорять UI.
  */
-fun formatMoney(amount: Double): String {
+fun formatMoney(amount: BigDecimal): String {
     val format = NumberFormat.getCurrencyInstance(appLocale).apply {
-        maximumFractionDigits = if (amount % 1.0 == 0.0) 0 else 2
-        minimumFractionDigits = if (amount % 1.0 == 0.0) 0 else 2
+        maximumFractionDigits = if (amount.scale() <= 0 || amount.stripTrailingZeros().scale() <= 0) 0 else 2
+        minimumFractionDigits = if (amount.scale() <= 0 || amount.stripTrailingZeros().scale() <= 0) 0 else 2
     }
     return format.format(amount)
 }
+
+/** Перегрузка для Double (для обратной совместимости). */
+fun formatMoney(amount: Double): String = formatMoney(amount.toBigDecimal())
 
 private val dayMonthFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("d MMMM", appLocale)
@@ -53,4 +56,20 @@ fun formatMonthYear(yearMonth: java.time.YearMonth): String {
 fun formatMonthShort(yearMonth: java.time.YearMonth): String {
     return yearMonth.month.getDisplayName(TextStyle.SHORT_STANDALONE, appLocale)
         .replaceFirstChar { it.uppercase(appLocale) }
+}
+
+/** Формат dd.MM.yyyy для отображения в UI: «15.03.2025». */
+private val dayMonthYearFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd.MM.yyyy", appLocale)
+
+/** Дата в формате dd.MM.yyyy. */
+fun formatDateDmYyyy(date: LocalDate): String = date.format(dayMonthYearFormatter)
+
+/** Парсинг даты из формата dd.MM.yyyy. */
+fun parseDateDmYyyy(input: String): LocalDate? {
+    return try {
+        LocalDate.parse(input, dayMonthYearFormatter)
+    } catch (_: Exception) {
+        null
+    }
 }

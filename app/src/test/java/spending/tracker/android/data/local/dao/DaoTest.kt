@@ -27,8 +27,8 @@ import spending.tracker.android.data.local.entity.UserEntity
  *
  * Покрывают:
  *  - `UserDao`: upsert / replaceCurrentUser / clearUsers / observeCurrentUser
- *  - `CategoryDao`: CRUD, replace, FK-согласованность для SubCategory
- *  - `SpendingDao`: CRUD, replaceAllForUser, сортировка
+ *  - `CategoryDao`: CRUD, sync, FK-согласованность для SubCategory
+ *  - `SpendingDao`: CRUD, syncForUser, сортировка
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(
@@ -106,10 +106,10 @@ class DaoTest {
     }
 
     @Test
-    fun categoryDao_replaceCategoriesForUser_clearsOldAndInsertsNew() = runTest {
+    fun categoryDao_syncCategoriesForUser_clearsOldAndInsertsNew() = runTest {
         val email = "u@x.y"
         categoryDao.upsertCategory(CategoryEntity(1, "Old", email))
-        categoryDao.replaceCategoriesForUser(
+        categoryDao.syncCategoriesForUser(
             email,
             listOf(
                 CategoryEntity(10, "Fresh-1", email),
@@ -158,14 +158,14 @@ class DaoTest {
         val email = "u@x.y"
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 1, amount = 100.0, categoryId = 1, categoryName = "Food",
+                id = 1, amount = "100", categoryId = 1, categoryName = "Food",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-01-01", description = null, userEmail = email, synced = true,
             ),
         )
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 2, amount = 200.0, categoryId = 1, categoryName = "Food",
+                id = 2, amount = "200", categoryId = 1, categoryName = "Food",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-02-01", description = null, userEmail = email, synced = true,
             ),
@@ -177,20 +177,20 @@ class DaoTest {
     }
 
     @Test
-    fun spendingDao_replaceAllForUser_removesOldSpendings() = runTest {
+    fun spendingDao_syncForUser_removesOldSpendings() = runTest {
         val email = "u@x.y"
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 1, amount = 100.0, categoryId = 1, categoryName = "Food",
+                id = 1, amount = "100", categoryId = 1, categoryName = "Food",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-01-01", description = null, userEmail = email, synced = true,
             ),
         )
-        spendingDao.replaceAllForUser(
+        spendingDao.syncForUser(
             email,
             listOf(
                 SpendingEntity(
-                    id = 99, amount = 10.0, categoryId = 1, categoryName = "Food",
+                    id = 99, amount = "10", categoryId = 1, categoryName = "Food",
                     subCategoryId = null, subCategoryName = null,
                     date = "2025-03-01", description = null, userEmail = email, synced = true,
                 ),
@@ -205,14 +205,14 @@ class DaoTest {
     fun spendingDao_isolatedByUserEmail() = runTest {
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 1, amount = 1.0, categoryId = 1, categoryName = "C",
+                id = 1, amount = "1", categoryId = 1, categoryName = "C",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-01-01", description = null, userEmail = "a@a", synced = true,
             ),
         )
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 2, amount = 2.0, categoryId = 1, categoryName = "C",
+                id = 2, amount = "2", categoryId = 1, categoryName = "C",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-01-01", description = null, userEmail = "b@b", synced = true,
             ),
@@ -227,7 +227,7 @@ class DaoTest {
         val email = "u@x.y"
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 1, amount = 10.0, categoryId = 1, categoryName = "C",
+                id = 1, amount = "10", categoryId = 1, categoryName = "C",
                 subCategoryId = null, subCategoryName = null,
                 date = "2025-01-01", description = null, userEmail = email, synced = true,
             ),
@@ -246,7 +246,7 @@ class DaoTest {
         categoryDao.upsertSubCategory(SubCategoryEntity(10, "Pizza", 1))
         spendingDao.upsertSpending(
             SpendingEntity(
-                id = 1, amount = 50.0, categoryId = 1, categoryName = "Food",
+                id = 1, amount = "50", categoryId = 1, categoryName = "Food",
                 subCategoryId = 10, subCategoryName = "Pizza",
                 date = "2025-01-01", description = "Lunch", userEmail = email, synced = true,
             ),
