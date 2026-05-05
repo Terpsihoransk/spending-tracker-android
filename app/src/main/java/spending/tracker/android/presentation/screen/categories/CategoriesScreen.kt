@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -166,14 +167,15 @@ fun CategoriesScreen(
                                 dialog = CategoryDialog.EditSubCategory(sub.id, sub.categoryId, sub.name)
                             },
                             onDeleteSub = { sub ->
-                                dialog = CategoryDialog.DeleteSubCategory(sub.id, sub.name)
-                            },
-                        )
+                                    dialog = CategoryDialog.DeleteSubCategory(sub.id, sub.name)
+                                },
+                            )
+                        }
+                        item { Spacer(Modifier.height(72.dp)) }
                     }
                 }
             }
         }
-    }
 
     // ---- Диалоги ----
     when (val d = dialog) {
